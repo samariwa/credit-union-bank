@@ -1,0 +1,117 @@
+version: "3.8"
+
+services:
+  # Jenkins: the CI/CD server that will build your image when changes are merged.
+  jenkins:
+    image: jenkinspython
+    build: .
+    container_name: jenkins
+    ports:
+      - "8080:8080"   # Jenkins UI
+      - "50000:50000" # Jenkins agent port
+    volumes:
+      - jenkins_home:/var/jenkins_home
+    networks:
+      - cicd-net
+
+  # Harbor DB: PostgreSQL instance required by Harbor.
+
+  harbor-db:
+    image: goharbor/harbor-db:v2.7.0
+    container_name: harbor-db
+    environment:
+      - POSTGRES_USER=harbor
+      - POSTGRES_PASSWORD=harbor
+      - POSTGRES_DB=registry
+    volumes:
+      - harbor_db_data:/var/lib/postgresql/data
+    networks:
+      cicd-net:
+        aliases:
+          - postgresql  # Added alias so Harbor core can resolve "postgresql"
+
+
+  # Harbor Core: The main Harbor API server.
+  harbor-core:
+    image: goharbor/harbor-core:v2.7.0
+    container_name: harbor-core
+    depends_on:
+      - harbor-db
+    environment:
+      - CONFIG_PATH=/etc/harbor/core
+    networks:
+      - cicd-net
+
+  # Harbor Registry: The Docker registry service (simplified demo service).
+  harbor-registry:
+    image: goharbor/registry-photon:v2.7.0
+    container_name: harbor-registry
+    depends_on:
+      - harbor-db
+    networks:
+      - cicd-net
+
+  # Harbor Portal: A simple UI for Harbor (mapped to port 8081 here).
+  harbor-portal:
+    image: goharbor/harbor-portal:v2.7.0
+    container_name: harbor-portal
+    depends_on:
+      - harbor-core
+    ports:
+      - "8081:80"
+    networks:
+      - cicd-net
+
+  # SonarQube: For scanning your code for smells, bugs, and quality issues.
+  sonar:
+    image: sonarqube:community
+    container_name: sonarqube
+    ports:
+      - "9000:9000"
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+    networks:
+      - cicd-net
+
+  # Anchore Engine: Scans your built Docker images for vulnerabilities.
+  anchore:
+    image: anchore/anchore-engine:v0.9.0
+    container_name: anchore
+    ports:
+      - "8228:8228"
+    environment:
+      - ANCHORE_FEED_INTERVAL=300
+      - DB_HOST=anchore-db
+      - DB_PORT=5432
+      - DB_USER=anchore
+      - DB_PASS=anchore
+      - DB_NAME=anchore
+    depends_on:
+      - anchore-db
+    networks:
+      - cicd-net
+
+  # Anchore DB: PostgreSQL instance for Anchore Engine.
+  anchore-db:
+    image: postgres:13
+    container_name: anchore-db
+    environment:
+      - POSTGRES_USER=anchore
+      - POSTGRES_PASSWORD=anchore
+      - POSTGRES_DB=anchore
+    volumes:
+      - anchore_db_data:/var/lib/postgresql/data
+    networks:
+      - cicd-net
+
+volumes:
+  jenkins_home:
+  harbor_db_data:
+  sonarqube_data:
+  sonarqube_extensions:
+  anchore_db_data:
+
+networks:
+  cicd-net:
+    driver: bridge
