@@ -22,10 +22,14 @@ const navItems = [
 
 export default function Sidebar() {
   return (
-    <aside className="w-64 h-screen bg-black text-white flex flex-col justify-between py-6 px-4">
+    <aside className="w-[400px] h-screen bg-black text-white flex flex-col justify-between py-6 px-4">
       <div>
         <div className="flex items-center justify-center mb-10">
-          <img src={logo} alt="Logo" className="w-32 h-auto object-contain" />
+          <img
+            src={logo}
+            alt="Logo"
+            className="w-[900px] h-auto object-contain text-3xl"
+          />
         </div>
         <nav className="space-y-2">
           {/* eslint-disable-next-line no-unused-vars */}
@@ -34,7 +38,7 @@ export default function Sidebar() {
               key={label}
               to={to}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-white/10 ${
+                `flex items-center gap-3 px-4 py-2 rounded-md text-lg font-medium transition-colors duration-200 hover:bg-white/10 ${
                   isActive ? "bg-white/10 text-white" : "text-gray-400"
                 }`
               }
@@ -47,8 +51,8 @@ export default function Sidebar() {
       </div>
       <div className="flex items-center gap-3 px-4">
         <div>
-          <p className="text-sm font-semibold">Lora Lewis</p>
-          <p className="text-xs text-gray-400">Branch Manager</p>
+          <p className="text-3xl font-semibold">Lora Lewis</p>
+          <p className="text-xl text-gray-400">Branch Manager</p>
         </div>
       </div>
     </aside>

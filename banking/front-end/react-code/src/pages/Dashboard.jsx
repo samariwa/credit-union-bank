@@ -1,21 +1,35 @@
 import Sidebar from "../components/Sidebar";
+import CardRow from "../components/Card"; // renamed from Card to CardRow
+import Transaction from "../components/Transaction";
+import TopBusinessCustomers from "../components/TopBusinessCustomers";
+import TransactionStatusChart from "../components/TransactionStatusChart";
+import FlaggedTransactions from "../components/FlaggedTransactions";
 
 export default function DashboardLayout() {
   return (
-    <div className="flex min-h-screen text-white">
+    <div className="flex min-h-screen text-white bg-[#0f0f0f]">
       <Sidebar />
-      <main className="flex-1 p-6 overflow-y-auto grid grid-cols-2 gap-6">
-        {/* Left Column: 3 rows */}
-        <div className="space-y-6">
-          <div className="bg-gray-800 p-4 rounded-lg">Left Row 1</div>
-          <div className="bg-gray-800 p-4 rounded-lg">Left Row 2</div>
-          <div className="bg-gray-800 p-4 rounded-lg">Left Row 3</div>
+
+      <main className="flex-1 p-6 overflow-y-auto grid grid-cols-[2fr_1.2fr] gap-6">
+        {/* Left Column */}
+        <div className="flex flex-col justify-between h-full">
+          <div className="flex flex-col gap-6">
+            <CardRow />
+          </div>
+          <div>
+            <Transaction />
+          </div>
+          <TopBusinessCustomers />
         </div>
 
-        {/* Right Column: 2 rows */}
-        <div className="space-y-6">
-          <div className="bg-gray-800 p-4 rounded-lg">Right Row 1</div>
-          <div className="bg-gray-800 p-4 rounded-lg">Right Row 2</div>
+        {/* Right Column */}
+        <div className="flex flex-col justify-between h-[1100px]">
+          <div className="mt-6">
+            <TransactionStatusChart />
+          </div>
+          <div>
+            <FlaggedTransactions />
+          </div>
         </div>
       </main>
     </div>
