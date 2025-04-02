@@ -1,10 +1,10 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
-    "./index.html",
     "./src/**/*.{html,js,ts,jsx,tsx}",
-    "app/**/*.{ts,tsx}",
-    "components/**/*.{ts,tsx}",
+    "./src/assets/**/*.{js,ts,jsx,tsx}",
+    "./src/components/**/*.{js,ts,jsx,tsx}",
+    "./src/pages/**/*.{js,ts,jsx,tsx}"
   ],
   theme: {
     container: {
@@ -82,6 +82,6 @@ export default {
       },
     },
   },
+  darkMode: ["class"],
   plugins: [],
-  darkMode: ["class"], // 使用 class 控制 dark mode
 };
