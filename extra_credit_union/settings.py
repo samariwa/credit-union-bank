@@ -42,13 +42,16 @@ INSTALLED_APPS = [
     #TASK1 Add swagger
     'rest_framework_swagger',
     'drf_yasg',
+    'corsheaders',
     #ENDTASK1
-    
+
 ]
 
 MIDDLEWARE = [
+    
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # Add this line
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -136,3 +139,6 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.AllowAny',
     ),
 }
+
+CORS_ALLOW_ALL_ORIGINS = True  # For development only, don't use in production
+CORS_ALLOW_CREDENTIALS = True
