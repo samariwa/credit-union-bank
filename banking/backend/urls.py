@@ -6,6 +6,7 @@ from rest_framework.routers import DefaultRouter
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .views import AccountViewSet, TransactionViewSet, BusinessViewSet
+from .auth_views import LoginView, UserAccountsView
 from .test_view import TestView
 import logging
 import traceback

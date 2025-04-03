@@ -20,13 +20,12 @@ class LoginView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
         
         user = authenticate(username=username, password=password)
-        
         if user is None:
             return Response({
                 'error': 'Invalid credentials'
             }, status=status.HTTP_401_UNAUTHORIZED)
         
-        refresh = RefreshToken.for_user(user)
+        refresh = RefreshToken.for_user(user)       
         
         # Get user's accounts
         accounts = Account.objects.filter(user=user)
