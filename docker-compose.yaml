@@ -10,6 +10,9 @@ services:
     volumes:
       - .:/app
     restart: "no"
+    networks:
+      - cicd-net
+
   bank-frontend:
     image: bank-frontend-image
     build: banking/frontend/react-code
@@ -22,3 +25,18 @@ services:
       - ./banking/frontend/react-code/src:/app/src
     restart: "no"
     command: npm run dev -- --host 0.0.0.0
+    networks:
+      - cicd-net
+
+  # SonarQube: For scanning your code for smells, bugs, and quality issues.
+  sonar:
+    image: sonarqube:community
+    container_name: sonarqube-dev-container
+    ports:
+      - "9000:9000"
+    networks:
+      - cicd-net
+
+networks:
+  cicd-net:
+    driver: bridge
