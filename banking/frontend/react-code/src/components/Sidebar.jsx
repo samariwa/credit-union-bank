@@ -21,6 +21,9 @@ const navItems = [
 ];
 
 export default function Sidebar() {
+  // Retrieve user info from localStorage
+  const userInfo = JSON.parse(localStorage.getItem("user_info"));
+
   return (
     <aside className="w-[400px] h-screen bg-black text-white flex flex-col justify-between py-6 px-4">
       <div>
@@ -51,8 +54,15 @@ export default function Sidebar() {
       </div>
       <div className="flex items-center gap-3 px-4">
         <div>
-          <p className="text-3xl font-semibold">Lora Lewis</p>
-          <p className="text-xl text-gray-400">Branch Manager</p>
+          {/* Display the user's name and role if they are logged in */}
+          {userInfo ? (
+            <>
+              <p className="text-3xl font-semibold">{userInfo.name}</p>
+              <p className="text-xl text-gray-400">{userInfo.role}</p>
+            </>
+          ) : (
+            <p className="text-xl text-gray-400">Guest</p>
+          )}
         </div>
       </div>
     </aside>

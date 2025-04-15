@@ -1,13 +1,35 @@
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import axios from "axios";
 import LoginButton from "../components/LoginButton";
 import logo from "../assets/logo.svg";
 
 export default function Login() {
   const navigate = useNavigate();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    navigate("/dashboard");
+
+    try {
+      const response = await axios.post("http://localhost:8000/api/token/", {
+        username,
+        password,
+      });
+
+      const { access, refresh, user } = response.data; // assuming `user` is part of the response containing user's information
+
+      localStorage.setItem("access_token", access);
+      localStorage.setItem("refresh_token", refresh);
+      localStorage.setItem("user_info", JSON.stringify(user)); // Save user info to localStorage
+
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Login error:", error);
+      setError("Login failed. Please check your credentials.");
+    }
   };
 
   return (
@@ -26,6 +48,8 @@ export default function Login() {
             Please fill in your unique admin login details below
           </h3>
 
+          {error && <div className="text-red-500 text-sm mb-4">{error}</div>}
+
           <form className="space-y-4" onSubmit={handleLogin}>
             <div>
               <label className="block text-sm font-medium text-gray-700">
@@ -33,6 +57,8 @@ export default function Login() {
               </label>
               <input
                 type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 className="w-full mt-1 px-4 py-2 bg-input border border-border text-foreground rounded-md"
                 placeholder="Enter your username"
               />
@@ -44,6 +70,8 @@ export default function Login() {
               </label>
               <input
                 type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="w-full mt-1 px-4 py-2 bg-input border border-border text-foreground rounded-md"
                 placeholder="Enter your password"
               />

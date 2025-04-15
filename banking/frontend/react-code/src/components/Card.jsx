@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 
+// InfoCard component is used to display each card's content
 const InfoCard = ({ title, value, gradient }) => {
   return (
     <div
@@ -12,34 +13,76 @@ const InfoCard = ({ title, value, gradient }) => {
 };
 
 export default function CardRow() {
-  const username = "Lora";
+  // State to hold the username fetched from localStorage
+  const [username, setUsername] = useState("");
+  // State to hold card data
+  const [cards, setCards] = useState([]);
+  // State for loading status
+  const [loading, setLoading] = useState(true);
+  // State for error message
+  const [error, setError] = useState(null);
 
-  const cards = [
-    {
-      title: "Accounts",
-      value: "143",
-      gradient: "from-purple-500 to-indigo-600",
-    },
-    {
-      title: "Transactions",
-      value: "3,450",
-      gradient: "from-teal-400 to-emerald-500",
-    },
-    {
-      title: "Flagged Transactions",
-      value: "13",
-      gradient: "from-pink-500 to-purple-600",
-    },
-    {
-      title: "Transaction Success Rate",
-      value: "97%",
-      gradient: "from-cyan-400 to-teal-500",
-    },
-  ];
+  // Function to fetch the username from localStorage
+  const fetchUsername = () => {
+    const storedUsername = localStorage.getItem("username"); // Get the username stored in localStorage
+    if (storedUsername) {
+      setUsername(storedUsername); // Set the username to state if it exists
+    }
+  };
+
+  // Function to fetch transaction data (example using an API)
+  const fetchData = async () => {
+    try {
+      const accountId = "123e4567-e89b-12d3-a456-426614174000"; // Example account_id for testing
+      const response = await fetch(
+        `/api/transactions/spending-summary/${accountId}/`
+      );
+
+      // Log the raw response text for debugging
+      const responseText = await response.text(); // Get the response as text
+      console.log("Raw response:", responseText); // Log raw response to check if it's HTML (e.g., error page)
+
+      if (!response.ok) {
+        throw new Error(
+          `Network response was not ok. Status: ${response.status}`
+        );
+      }
+
+      // Try to parse the response as JSON if it's valid JSON
+      const data = JSON.parse(responseText);
+
+      // Assuming the API returns a totalSpending field
+      if (data.totalSpending) {
+        setCards([
+          {
+            title: "Total Spending",
+            value: `$${data.totalSpending}`,
+            gradient: "from-teal-400 to-emerald-500",
+          },
+        ]);
+      } else {
+        setError("No spending data found.");
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setError(error.message); // Set the error state with the error message
+    } finally {
+      setLoading(false); // Set loading to false after data fetch completes
+    }
+  };
+
+  // useEffect hook to call fetchUsername and fetchData when the component mounts
+  useEffect(() => {
+    fetchUsername(); // Fetch username when the component mounts
+    fetchData(); // Fetch data when the component mounts
+  }, []); // Empty dependency array ensures this runs only once when the component is mounted
 
   return (
     <div className="flex flex-col space-y-6 w-full">
-      <h1 className="text-3xl font-bold text-white">Hello, {username}!</h1>
+      {/* Display the dynamic username, or 'Guest' if no username is found */}
+      <h1 className="text-3xl font-bold text-white">
+        Hello, {username || "Guest"}!
+      </h1>
 
       <div className="flex items-center justify-between w-full">
         <h2 className="text-xl font-semibold text-white">Your Cards</h2>
@@ -49,14 +92,22 @@ export default function CardRow() {
       </div>
 
       <div className="flex gap-6 justify-start flex-wrap w-full">
-        {cards.map((card, index) => (
-          <InfoCard
-            key={index}
-            title={card.title}
-            value={card.value}
-            gradient={card.gradient}
-          />
-        ))}
+        {/* Display error message if there's an error */}
+        {error && <p className="text-red-500">{error}</p>}
+
+        {/* Display loading message if data is still being fetched */}
+        {loading && !error && <p className="text-white">Loading data...</p>}
+
+        {/* Render cards if data is available */}
+        {cards.length > 0 &&
+          cards.map((card, index) => (
+            <InfoCard
+              key={index}
+              title={card.title}
+              value={card.value}
+              gradient={card.gradient}
+            />
+          ))}
       </div>
     </div>
   );

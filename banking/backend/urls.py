@@ -31,7 +31,7 @@ urlpatterns = [
     path('test-view/', TestView.as_view(), name='banking-test-view'),
 ]
 
-#TASK1 Add swagger
+# TASK1: Add swagger documentation
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi 
 from rest_framework.permissions import AllowAny 
@@ -50,7 +50,7 @@ urlpatterns += [
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 ]
-#ENDTASK1
+# ENDTASK1
 
 # These insecure endpoints are kept from the original file
 from django.http import JsonResponse

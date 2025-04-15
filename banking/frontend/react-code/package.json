@@ -21,6 +21,7 @@
     "arg": "^5.0.2",
     "argparse": "^2.0.1",
     "autoprefixer": "^10.4.21",
+    "axios": "^1.8.4",
     "balanced-match": "^1.0.2",
     "binary-extensions": "^2.3.0",
     "brace-expansion": "^1.1.11",
