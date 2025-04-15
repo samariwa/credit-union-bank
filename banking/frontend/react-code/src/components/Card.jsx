@@ -13,6 +13,8 @@ const InfoCard = ({ title, value, gradient }) => {
 };
 
 export default function CardRow() {
+  // Retrieve user info from localStorage
+  const userInfo = JSON.parse(localStorage.getItem("user_info"));
   // State to hold the username fetched from localStorage
   const [username, setUsername] = useState("");
   // State to hold card data
@@ -24,7 +26,7 @@ export default function CardRow() {
 
   // Function to fetch the username from localStorage
   const fetchUsername = () => {
-    const storedUsername = localStorage.getItem("username"); // Get the username stored in localStorage
+    const storedUsername = userInfo.username; // Get the username stored in localStorage
     if (storedUsername) {
       setUsername(storedUsername); // Set the username to state if it exists
     }
@@ -56,7 +58,7 @@ export default function CardRow() {
         setCards([
           {
             title: "Total Spending",
-            value: `$${data.totalSpending}`,
+            value: `${data.totalSpending}`,
             gradient: "from-teal-400 to-emerald-500",
           },
         ]);

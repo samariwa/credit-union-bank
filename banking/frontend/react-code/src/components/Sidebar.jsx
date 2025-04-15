@@ -57,8 +57,8 @@ export default function Sidebar() {
           {/* Display the user's name and role if they are logged in */}
           {userInfo ? (
             <>
-              <p className="text-3xl font-semibold">{userInfo.name}</p>
-              <p className="text-xl text-gray-400">{userInfo.role}</p>
+              <p className="text-3xl font-semibold">{userInfo.first_name}</p>
+              <p className="text-xl text-gray-400">{userInfo.is_staff}</p>
             </>
           ) : (
             <p className="text-xl text-gray-400">Guest</p>
