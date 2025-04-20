@@ -14,17 +14,21 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      const response = await axios.post("http://localhost:8000/api/auth/login/", {
+      const response = await axios.post("http://localhost:8000/api/token/", {
         username,
         password,
       });
 
-      const { access, refresh, user } = response.data; // assuming `user` is part of the response containing user's information
+      const { access, refresh } = response.data;
 
+      // 保存到 localStorage
       localStorage.setItem("access_token", access);
       localStorage.setItem("refresh_token", refresh);
-      localStorage.setItem("user_info", JSON.stringify(user)); // Save user info to localStorage
 
+      // 设置 Axios 的默认 Authorization 头部
+      axios.defaults.headers.common["Authorization"] = `Bearer ${access}`;
+
+      // 跳转到仪表盘
       navigate("/dashboard");
     } catch (error) {
       console.error("Login error:", error);

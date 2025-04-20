@@ -1,30 +1,39 @@
-"""
-URL configuration for extra_credit_union project.
-"""
+# extra_credit_union/urls.py
+
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework.routers import DefaultRouter
+from banking.backend.views import TransactionViewSet, AccountViewSet, BusinessViewSet
 from banking.backend.auth_views import LoginView, UserAccountsView
 from banking.backend.template_views import register_api
 
+# DRF Router registration (handles /transactions/, /accounts/, /businesses/)
+router = DefaultRouter()
+router.register(r'transactions', TransactionViewSet, basename='transactions')
+router.register(r'accounts', AccountViewSet, basename='accounts')
+router.register(r'businesses', BusinessViewSet, basename='businesses')
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('banking.backend.urls')),
-    
-    # JWT token authentication
+
+    # JWT authentication endpoints
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    
-    # Auth endpoints with /auth/ prefix (RESTful API convention)
+
+    # Custom auth endpoints
     path('api/auth/login/', LoginView.as_view(), name='auth-login'),
     path('api/auth/register/', register_api, name='auth-register'),
-    path('api/auth/user/', UserAccountsView.as_view(), name='user-accounts'),
+    path('api/auth/user/', UserAccountsView.as_view(), name='auth-user'),
     path('api/auth/logout/', lambda request: Response({'detail': 'Successfully logged out.'}), name='auth-logout'),
-    
-    # Same endpoints without /auth/ prefix (matching frontend expectations)
-    path('api/login/', LoginView.as_view(), name='api-login'),
-    path('api/register/', register_api, name='api-register'),
-    path('api/logout/', lambda request: Response({'detail': 'Successfully logged out.'}), name='api-logout'),
-    path('api/user/', UserAccountsView.as_view(), name='api-user'),  # Add this to match frontend request
+
+    # Aliases (for frontend compatibility)
+    path('api/login/', LoginView.as_view(), name='login'),
+    path('api/register/', register_api, name='register'),
+    path('api/user/', UserAccountsView.as_view(), name='user'),
+    path('api/logout/', lambda request: Response({'detail': 'Successfully logged out.'}), name='logout'),
+
+    # API endpoints (accounts, transactions, etc.)
+    path('api/', include(router.urls)),  # 👈 include router-generated paths like /api/transactions/
 ]
