@@ -14,7 +14,7 @@ const InfoCard = ({ title, value, gradient }) => {
 };
 
 export default function CardRow() {
-  const username = "Lora";
+  const userInfo = JSON.parse(localStorage.getItem("user_info"));
 
   // State variables for dynamic values
   const [accountCount, setAccountCount] = useState("...");
@@ -118,10 +118,10 @@ export default function CardRow() {
 
   return (
     <div className="flex flex-col space-y-6 w-full">
-      <h1 className="text-3xl font-bold text-white">Hello, {username}!</h1>
+      <h1 className="text-3xl font-bold text-white">Hello, {userInfo.username}!</h1>
 
       <div className="flex items-center justify-between w-full">
-        <h2 className="text-xl font-semibold text-white">Your Cards</h2>
+        <h2 className="text-xl font-semibold text-white">Summary</h2>
         <button className="text-base text-white hover:underline">
           Add More+
         </button>

@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import BackButton from "../components/BackButton"; // Import BackButton component
+import Sidebar from "../components/Sidebar"; // Import Sidebar component
+import Breadcrumb from "../components/Breadcrumb"; // Import Breadcrumb component
 
 const AccountDetail = () => {
   const { id } = useParams();
@@ -54,47 +57,57 @@ const AccountDetail = () => {
     return <div className="p-4 text-center text-gray-500">Loading...</div>;
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <div className="bg-white shadow rounded-xl p-6 mb-6">
-        <h1 className="text-2xl font-bold mb-2">Account Details</h1>
-        <p className="text-gray-700">
-          <strong>Name:</strong> {account.name}
-        </p>
-        <p className="text-gray-700">
-          <strong>Type:</strong> {account.account_type_display}
-        </p>
-        <p className="text-gray-700">
-          <strong>Starting Balance:</strong> £{account.starting_balance}
-        </p>
-        <p className="text-gray-700">
-          <strong>Round-Up Pot:</strong> £{account.round_up_pot}
-        </p>
-        <p className="text-gray-700">
-          <strong>Postcode:</strong> {account.postcode}
-        </p>
-        <p className="text-gray-700">
-          <strong>User:</strong> {account.user_details?.username}
-        </p>
-      </div>
+    <div className="flex min-h-screen">
+      <Sidebar />
+      <div className="flex-1 p-6 max-w-4xl mx-auto">
+        <Breadcrumb
+          items={[
+            { label: "Accounts", to: "/accounts" },
+            { label: "Account Details" },
+          ]}
+        />
+        <BackButton to="/accounts" />
+        <div className="bg-white shadow rounded-xl p-6 mb-6">
+          <h1 className="text-2xl font-bold mb-2">Account Details</h1>
+          <p className="text-gray-700">
+            <strong>Name:</strong> {account.name}
+          </p>
+          <p className="text-gray-700">
+            <strong>Type:</strong> {account.account_type_display}
+          </p>
+          <p className="text-gray-700">
+            <strong>Starting Balance:</strong> £{account.starting_balance}
+          </p>
+          <p className="text-gray-700">
+            <strong>Round-Up Pot:</strong> £{account.round_up_pot}
+          </p>
+          <p className="text-gray-700">
+            <strong>Postcode:</strong> {account.postcode}
+          </p>
+          <p className="text-gray-700">
+            <strong>User:</strong> {account.user_details?.username}
+          </p>
+        </div>
 
-      <div className="bg-white shadow rounded-xl p-6">
-        <h2 className="text-xl font-semibold mb-4">Transactions</h2>
-        {transactions.length === 0 ? (
-          <p className="text-gray-500">No transactions found.</p>
-        ) : (
-          <ul className="space-y-3">
-            {transactions.map((txn) => (
-              <li key={txn.id} className="border-b pb-2">
-                <p className="font-medium">
-                  {txn.transaction_type} - £{txn.amount}
-                </p>
-                <p className="text-sm text-gray-500">
-                  {new Date(txn.timestamp).toLocaleString()}
-                </p>
-              </li>
-            ))}
-          </ul>
-        )}
+        <div className="bg-white shadow rounded-xl p-6">
+          <h2 className="text-xl font-semibold mb-4">Transactions</h2>
+          {transactions.length === 0 ? (
+            <p className="text-gray-500">No transactions found.</p>
+          ) : (
+            <ul className="space-y-3">
+              {transactions.map((txn) => (
+                <li key={txn.id} className="border-b pb-2">
+                  <p className="font-medium">
+                    {txn.transaction_type} - £{txn.amount}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {new Date(txn.timestamp).toLocaleString()}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </div>
   );

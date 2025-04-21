@@ -9,6 +9,7 @@ import {
   CreditCard,
 } from "lucide-react";
 import logo from "../assets/logo.svg";
+import avatar from "../assets/avatar.png"; // Import the avatar image
 import { NavLink } from "react-router-dom";
 
 const navItems = [
@@ -55,12 +56,19 @@ export default function Sidebar() {
       <div className="flex items-center gap-3 px-4">
         <div>
           {userInfo ? (
-            <>
-              <p className="text-3xl font-semibold">{userInfo.first_name}</p>
-              <p className="text-xl text-gray-400">
-                {userInfo.is_staff ? "Admin" : "User"}
-              </p>
-            </>
+            <div className="flex items-center gap-3">
+              <img
+                src={avatar} // Use the imported avatar image
+                alt="User Avatar"
+                className="w-10 h-10 rounded-full object-cover"
+              />
+              <div>
+                <p className="text-3xl font-semibold">{userInfo.username}</p>
+                <p className="text-xl text-gray-400">
+                  {userInfo.is_staff ? "Admin" : "User"}
+                </p>
+              </div>
+            </div>
           ) : (
             <p className="text-xl text-gray-400">Guest</p>
           )}
