@@ -16,34 +16,29 @@ const AccountList = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const mockAccounts = [
-      {
-        id: 1,
-        name: "Personal Savings",
-        account_type_display: "Savings",
-        starting_balance: 1500.0,
-        user: {
-          id: 101,
-          first_name: "Jane",
-          last_name: "Doe",
-          username: "janedoe",
-        },
-      },
-      {
-        id: 2,
-        name: "Everyday Spending",
-        account_type_display: "Checking",
-        starting_balance: 230.45,
-        user: {
-          id: 102,
-          first_name: "John",
-          last_name: "Smith",
-          username: "jsmith",
-        },
-      },
-    ];
-    setAccounts(mockAccounts);
-    setFilteredAccounts(mockAccounts);
+    const fetchAccounts = async () => {
+      try {
+        const token = localStorage.getItem("access_token");
+        const response = await fetch("http://127.0.0.1:8000/api/accounts/", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setAccounts(data);
+        setFilteredAccounts(data);
+      } catch (error) {
+        console.error("Failed to fetch accounts:", error);
+      }
+    };
+
+    fetchAccounts();
   }, []);
 
   useEffect(() => {
@@ -52,13 +47,13 @@ const AccountList = () => {
     } else {
       const filtered = accounts.filter((acc) =>
         activeTab === "Savings Accounts"
-          ? acc.account_type_display === "Savings"
+          ? acc.account_type === "savings"
           : activeTab === "Current Accounts"
-          ? acc.account_type_display === "Checking"
+          ? acc.account_type === "current"
           : activeTab === "Credit Accounts"
-          ? acc.account_type_display === "Credit"
-          : activeTab === "Other Accounts"
-          ? !["Savings", "Checking", "Credit"].includes(acc.account_type_display)
+          ? acc.account_type === "credit"
+          : activeTab === "other"
+          ? !["savings", "current", "credit"].includes(acc.account_type)
           : true
       );
       setFilteredAccounts(filtered);
@@ -115,7 +110,7 @@ const AccountList = () => {
               </button>
             ))}
           </div>
-          <table className="table-auto w-full text-left border-collapse">
+          <table className="table-auto w-[95%] text-left border-collapse mx-auto"> {/* Adjusted table width to 95% and centered it */}
             <thead>
               <tr className="border-b">
                 <th className="py-2 px-4 font-medium text-gray-700">Account Number</th>
@@ -131,17 +126,15 @@ const AccountList = () => {
                 <tr key={acc.id} className="border-b hover:bg-gray-50">
                   <td className="py-2 px-4 text-gray-700">{acc.id}</td>
                   <td className="py-2 px-4 text-gray-700">
-                    {acc.user.first_name} {acc.user.last_name}
+                    {acc.user_details.first_name} {acc.user_details.last_name}
                   </td>
-                  <td className="py-2 px-4 text-gray-700">{acc.user.username}</td>
-                  <td className="py-2 px-4 text-gray-700">
-                    {acc.name} ({acc.account_type_display})
-                  </td>
+                  <td className="py-2 px-4 text-gray-700">{acc.user_details.username}</td>
+                  <td className="py-2 px-4 text-gray-700">{acc.account_type_display}</td>
                   <td className="py-2 px-4 text-gray-700">£{acc.starting_balance}</td>
                   <td className="py-2 px-4 text-gray-700">
                     <button
                       onClick={() => handleCardClick(acc.id)}
-                      className="text-gray-800 hover:underline hover:text-gray-600"
+                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 hover:text-gray-800"
                     >
                       View
                     </button>

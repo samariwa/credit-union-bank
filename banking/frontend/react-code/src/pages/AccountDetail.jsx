@@ -1,56 +1,66 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import BackButton from "../components/BackButton"; // Import BackButton component
 import Sidebar from "../components/Sidebar"; // Import Sidebar component
 import Breadcrumb from "../components/Breadcrumb"; // Import Breadcrumb component
 
 const AccountDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [account, setAccount] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // ✅ Replace this mock data with real API call:
-    // axios.get(`/api/accounts/${id}/`, { headers: { Authorization: `Bearer ${token}` } })
-    const mockAccount = {
-      id: id,
-      name: "Personal Savings",
-      account_type_display: "Savings",
-      starting_balance: 1500.0,
-      round_up_pot: 35.4,
-      postcode: "BH1 2AA",
-      user_details: {
-        username: "janedoe",
-      },
+    const fetchAccountDetails = async () => {
+      try {
+        const token = localStorage.getItem("access_token");
+        const response = await fetch(`http://127.0.0.1:8000/api/accounts/${id}/`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setAccount(data);
+      } catch (error) {
+        console.error("Failed to fetch account details:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    const mockTransactions = [
-      {
-        id: 1,
-        transaction_type: "Deposit",
-        amount: 200,
-        timestamp: "2024-04-10T14:23:00Z",
-      },
-      {
-        id: 2,
-        transaction_type: "Withdrawal",
-        amount: 50,
-        timestamp: "2024-04-12T09:10:00Z",
-      },
-      {
-        id: 3,
-        transaction_type: "Payment",
-        amount: 120,
-        timestamp: "2024-04-14T18:45:00Z",
-      },
-    ];
+    fetchAccountDetails();
+  }, [id]);
 
-    setTimeout(() => {
-      setAccount(mockAccount);
-      setTransactions(mockTransactions);
-      setLoading(false);
-    }, 500); // simulate loading delay
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const token = localStorage.getItem("access_token");
+        const response = await fetch(`http://127.0.0.1:8000/api/transactions/account/${id}/`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setTransactions(data);
+      } catch (error) {
+        console.error("Failed to fetch transactions:", error);
+      }
+    };
+
+    fetchTransactions();
   }, [id]);
 
   if (loading || !account)
@@ -104,18 +114,35 @@ const AccountDetail = () => {
           {transactions.length === 0 ? (
             <p className="text-gray-500">No transactions found.</p>
           ) : (
-            <ul className="space-y-3">
-              {transactions.map((txn) => (
-                <li key={txn.id} className="border-b pb-2">
-                  <p className="font-medium">
-                    {txn.transaction_type} - £{txn.amount}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {new Date(txn.timestamp).toLocaleString()}
-                  </p>
-                </li>
-              ))}
-            </ul>
+            <table className="table-auto w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b">
+                  <th className="py-2 px-4 font-medium text-gray-700">Type</th>
+                  <th className="py-2 px-4 font-medium text-gray-700">Amount</th>
+                  <th className="py-2 px-4 font-medium text-gray-700">Timestamp</th>
+                  <th className="py-2 px-4 font-medium text-gray-700">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactions.map((txn) => (
+                  <tr key={txn.id} className="border-b hover:bg-gray-50">
+                    <td className="py-2 px-4 text-gray-700">{txn.transaction_type}</td>
+                    <td className="py-2 px-4 text-gray-700">£{txn.amount}</td>
+                    <td className="py-2 px-4 text-gray-700">
+                      {new Date(txn.timestamp).toLocaleString()}
+                    </td>
+                    <td className="py-2 px-4 text-gray-700">
+                      <button
+                        onClick={() => navigate(`/transaction/${txn.id}`)}
+                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 hover:text-gray-800"
+                      >
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
         </div>
       </div>

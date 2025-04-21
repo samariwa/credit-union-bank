@@ -7,7 +7,8 @@ import {
   Shield,
   HelpCircle,
   CreditCard,
-} from "lucide-react";
+  FileText,
+} from "lucide-react"; // Added FileText for transactions
 import logo from "../assets/logo.svg";
 import avatar from "../assets/avatar.png"; // Import the avatar image
 import { NavLink } from "react-router-dom";
@@ -16,7 +17,8 @@ const navItems = [
   { icon: Home, label: "Dashboard", to: "/dashboard" },
   { icon: BarChart2, label: "Analytics", to: "/analytics" },
   { icon: Wallet, label: "Wallet", to: "/wallet" },
-  { icon: CreditCard, label: "Accounts", to: "/accounts" },
+  { icon: CreditCard, label: "Accounts", to: "/accounts" }, // Updated to CreditCard for accounts
+  { icon: FileText, label: "Transactions", to: "/transactions" }, // Added FileText for transactions
   { icon: User, label: "Profile", to: "/profile" },
   { icon: Settings, label: "Settings", to: "/settings" },
   { icon: Shield, label: "Security", to: "/security" },
