@@ -6,6 +6,8 @@ import Breadcrumb from "../components/Breadcrumb"; // Import Breadcrumb componen
 
 const AccountList = () => {
   const [accounts, setAccounts] = useState([]);
+  const [filteredAccounts, setFilteredAccounts] = useState([]);
+  const [activeTab, setActiveTab] = useState("All Accounts");
   const [selectedUser, setSelectedUser] = useState(null);
   const [actionType, setActionType] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -41,7 +43,27 @@ const AccountList = () => {
       },
     ];
     setAccounts(mockAccounts);
+    setFilteredAccounts(mockAccounts);
   }, []);
+
+  useEffect(() => {
+    if (activeTab === "All Accounts") {
+      setFilteredAccounts(accounts);
+    } else {
+      const filtered = accounts.filter((acc) =>
+        activeTab === "Savings Accounts"
+          ? acc.account_type_display === "Savings"
+          : activeTab === "Current Accounts"
+          ? acc.account_type_display === "Checking"
+          : activeTab === "Credit Accounts"
+          ? acc.account_type_display === "Credit"
+          : activeTab === "Other Accounts"
+          ? !["Savings", "Checking", "Credit"].includes(acc.account_type_display)
+          : true
+      );
+      setFilteredAccounts(filtered);
+    }
+  }, [activeTab, accounts]);
 
   const handleActionClick = (user, type) => {
     setSelectedUser(user);
@@ -78,47 +100,56 @@ const AccountList = () => {
             ]}
           />
         </div>
-        <h1 className="text-2xl font-bold mb-4">All Accounts</h1>
-        <div className="grid gap-4">
-          {accounts.map((acc) => (
-            <div
-              key={acc.id}
-              className="flex justify-between items-center bg-white p-4 shadow rounded-xl hover:bg-gray-50 cursor-pointer relative"
-              onClick={() => handleCardClick(acc.id)}
-            >
-              <div>
-                <h2 className="text-lg font-semibold">
-                  {acc.user.first_name} {acc.user.last_name}
-                </h2>
-                <p className="text-gray-600">Username: {acc.user.username}</p>
-                <p className="text-gray-600">
-                  Account: {acc.name} ({acc.account_type_display})
-                </p>
-                <p className="text-gray-600">Balance: £{acc.starting_balance}</p>
-              </div>
-              <div className="relative z-10" onClick={(e) => e.stopPropagation()}>
-                <button onClick={() => setMenuOpenId(acc.id)}>
-                  <MoreVertical className="text-gray-500 hover:text-gray-800" />
-                </button>
-                {menuOpenId === acc.id && (
-                  <div className="absolute right-0 mt-2 w-32 bg-white shadow rounded p-2 text-sm">
+        <div className="bg-white shadow rounded-xl p-6">
+          <h1 className="text-2xl font-bold mb-4">{activeTab}</h1> {/* Update title dynamically based on active tab */}
+          <div className="flex space-x-4 mb-4">
+            {['All Accounts', 'Savings Accounts', 'Current Accounts', 'Credit Accounts', 'Other Accounts'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-4 py-2 rounded ${
+                  activeTab === tab ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-700'
+                } hover:bg-gray-700 hover:text-white`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+          <table className="table-auto w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b">
+                <th className="py-2 px-4 font-medium text-gray-700">Account Number</th>
+                <th className="py-2 px-4 font-medium text-gray-700">Name</th>
+                <th className="py-2 px-4 font-medium text-gray-700">Username</th>
+                <th className="py-2 px-4 font-medium text-gray-700">Account</th>
+                <th className="py-2 px-4 font-medium text-gray-700">Balance</th>
+                <th className="py-2 px-4 font-medium text-gray-700">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredAccounts.map((acc) => (
+                <tr key={acc.id} className="border-b hover:bg-gray-50">
+                  <td className="py-2 px-4 text-gray-700">{acc.id}</td>
+                  <td className="py-2 px-4 text-gray-700">
+                    {acc.user.first_name} {acc.user.last_name}
+                  </td>
+                  <td className="py-2 px-4 text-gray-700">{acc.user.username}</td>
+                  <td className="py-2 px-4 text-gray-700">
+                    {acc.name} ({acc.account_type_display})
+                  </td>
+                  <td className="py-2 px-4 text-gray-700">£{acc.starting_balance}</td>
+                  <td className="py-2 px-4 text-gray-700">
                     <button
-                      className="block w-full text-left hover:bg-gray-100 px-2 py-1"
-                      onClick={() => handleActionClick(acc.user, "edit")}
+                      onClick={() => handleCardClick(acc.id)}
+                      className="text-gray-800 hover:underline hover:text-gray-600"
                     >
-                      Edit
+                      View
                     </button>
-                    <button
-                      className="block w-full text-left text-red-600 hover:bg-red-50 px-2 py-1"
-                      onClick={() => handleActionClick(acc.user, "delete")}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
         {showAuthModal && selectedUser && (

@@ -68,25 +68,35 @@ const AccountDetail = () => {
         />
         <BackButton to="/accounts" />
         <div className="bg-white shadow rounded-xl p-6 mb-6">
-          <h1 className="text-2xl font-bold mb-2">Account Details</h1>
-          <p className="text-gray-700">
-            <strong>Name:</strong> {account.name}
-          </p>
-          <p className="text-gray-700">
-            <strong>Type:</strong> {account.account_type_display}
-          </p>
-          <p className="text-gray-700">
-            <strong>Starting Balance:</strong> £{account.starting_balance}
-          </p>
-          <p className="text-gray-700">
-            <strong>Round-Up Pot:</strong> £{account.round_up_pot}
-          </p>
-          <p className="text-gray-700">
-            <strong>Postcode:</strong> {account.postcode}
-          </p>
-          <p className="text-gray-700">
-            <strong>User:</strong> {account.user_details?.username}
-          </p>
+          <h1 className="text-2xl font-bold mb-4">Account Details</h1>
+          <table className="table-auto w-full text-left border-collapse">
+            <tbody>
+              <tr className="border-b">
+                <th className="py-2 px-4 font-medium text-gray-700">Name</th>
+                <td className="py-2 px-4 text-gray-700">{account.name}</td>
+              </tr>
+              <tr className="border-b">
+                <th className="py-2 px-4 font-medium text-gray-700">Type</th>
+                <td className="py-2 px-4 text-gray-700">{account.account_type_display}</td>
+              </tr>
+              <tr className="border-b">
+                <th className="py-2 px-4 font-medium text-gray-700">Starting Balance</th>
+                <td className="py-2 px-4 text-gray-700">£{account.starting_balance}</td>
+              </tr>
+              <tr className="border-b">
+                <th className="py-2 px-4 font-medium text-gray-700">Round-Up Pot</th>
+                <td className="py-2 px-4 text-gray-700">£{account.round_up_pot}</td>
+              </tr>
+              <tr className="border-b">
+                <th className="py-2 px-4 font-medium text-gray-700">Postcode</th>
+                <td className="py-2 px-4 text-gray-700">{account.postcode}</td>
+              </tr>
+              <tr>
+                <th className="py-2 px-4 font-medium text-gray-700">User</th>
+                <td className="py-2 px-4 text-gray-700">{account.user_details?.username}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
         <div className="bg-white shadow rounded-xl p-6">
