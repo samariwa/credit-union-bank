@@ -98,6 +98,31 @@ class BankingAPITestCase(APITestCase):
         self.business.refresh_from_db()
         self.assertTrue(self.business.sanctioned)
 
+    def test_update_transaction_details(self):
+        # Test updating transaction details
+        url = reverse('transaction-detail', args=[self.transaction.id])
+        data = {
+            "from_account": "nonexistent-account",
+            "to_account": "nonexistent-account",
+            "business": "nonexistent-business"
+        }
+        response = self.client.patch(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("detail", response.data)
+
+        # Test valid update
+        valid_data = {
+            "from_account": str(self.account.id),
+            "to_account": str(self.account.id),
+            "business": self.business.id
+        }
+        response = self.client.patch(url, valid_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.transaction.refresh_from_db()
+        self.assertEqual(self.transaction.from_account.id, self.account.id)
+        self.assertEqual(self.transaction.to_account.id, self.account.id)
+        self.assertEqual(self.transaction.business.id, self.business.id)
+
 #TASK4 Add manager_list and user_account actions
 
 class BankingAPIManagerTestCase(APITestCase):
@@ -171,4 +196,4 @@ class BankingAPITestCase3(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)     
 
 #
-#ENDTASK5        
+#ENDTASK5

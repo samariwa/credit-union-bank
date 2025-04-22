@@ -10,6 +10,9 @@ const AccountDetail = () => {
   const [account, setAccount] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editPostcode, setEditPostcode] = useState("");
 
   useEffect(() => {
     const fetchAccountDetails = async () => {
@@ -28,6 +31,8 @@ const AccountDetail = () => {
 
         const data = await response.json();
         setAccount(data);
+        setEditName(data.name);
+        setEditPostcode(data.postcode);
       } catch (error) {
         console.error("Failed to fetch account details:", error);
       } finally {
@@ -63,20 +68,96 @@ const AccountDetail = () => {
     fetchTransactions();
   }, [id]);
 
+  const handleEditSubmit = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      const response = await fetch(`http://127.0.0.1:8000/api/accounts/${id}/`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: editName,
+          postcode: editPostcode,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+
+      const updatedAccount = await response.json();
+      setAccount(updatedAccount);
+      setIsEditModalOpen(false);
+    } catch (error) {
+      console.error("Failed to update account details:", error);
+    }
+  };
+
   if (loading || !account)
     return <div className="p-4 text-center text-gray-500">Loading...</div>;
 
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <div className="flex-1 p-6 max-w-4xl mx-auto">
+      <div className="flex-1 p-6 max-w-4xl mx-auto relative">
         <Breadcrumb
           items={[
             { label: "Accounts", to: "/accounts" },
             { label: "Account Details" },
           ]}
         />
-        <BackButton to="/accounts" />
+        <div className="flex items-center justify-between mb-4">
+          <BackButton to="/accounts" />
+          <button
+            onClick={() => setIsEditModalOpen(true)}
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 hover:text-gray-800"
+          >
+            Edit
+          </button>
+        </div>
+
+        {isEditModalOpen && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div className="bg-white rounded-xl p-6 max-w-md w-full">
+              <h2 className="text-xl font-semibold mb-4">Edit Account Details</h2>
+              <div className="mb-4">
+                <label className="block text-gray-700 font-medium mb-2">Name</label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full border px-3 py-2 rounded"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700 font-medium mb-2">Postcode</label>
+                <input
+                  type="text"
+                  value={editPostcode}
+                  onChange={(e) => setEditPostcode(e.target.value)}
+                  className="w-full border px-3 py-2 rounded"
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleEditSubmit}
+                  className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="bg-white shadow rounded-xl p-6 mb-6">
           <h1 className="text-2xl font-bold mb-4">Account Details</h1>
           <table className="table-auto w-full text-left border-collapse">
