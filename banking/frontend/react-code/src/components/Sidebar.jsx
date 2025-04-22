@@ -8,17 +8,19 @@ import {
   HelpCircle,
   CreditCard,
   FileText,
-} from "lucide-react"; // Added FileText for transactions
+  Briefcase,
+} from "lucide-react";
 import logo from "../assets/logo.svg";
-import avatar from "../assets/avatar.png"; // Import the avatar image
+import avatar from "../assets/avatar.png";
 import { NavLink } from "react-router-dom";
 
 const navItems = [
   { icon: Home, label: "Dashboard", to: "/dashboard" },
   { icon: BarChart2, label: "Analytics", to: "/analytics" },
   { icon: Wallet, label: "Wallet", to: "/wallet" },
-  { icon: CreditCard, label: "Accounts", to: "/accounts" }, // Updated to CreditCard for accounts
-  { icon: FileText, label: "Transactions", to: "/transactions" }, // Added FileText for transactions
+  { icon: CreditCard, label: "Accounts", to: "/accounts" },
+  { icon: FileText, label: "Transactions", to: "/transactions" },
+  { icon: Briefcase, label: "Businesses", to: "/businesses" },
   { icon: User, label: "Profile", to: "/profile" },
   { icon: Settings, label: "Settings", to: "/settings" },
   { icon: Shield, label: "Security", to: "/security" },
@@ -56,25 +58,23 @@ export default function Sidebar() {
         </nav>
       </div>
       <div className="flex items-center gap-3 px-4">
-        <div>
-          {userInfo ? (
-            <div className="flex items-center gap-3">
-              <img
-                src={avatar} // Use the imported avatar image
-                alt="User Avatar"
-                className="w-10 h-10 rounded-full object-cover"
-              />
-              <div>
-                <p className="text-3xl font-semibold">{userInfo.username}</p>
-                <p className="text-xl text-gray-400">
-                  {userInfo.is_staff ? "Admin" : "User"}
-                </p>
-              </div>
+        {userInfo ? (
+          <div className="flex items-center gap-3">
+            <img
+              src={avatar}
+              alt="User Avatar"
+              className="w-10 h-10 rounded-full object-cover"
+            />
+            <div>
+              <p className="text-3xl font-semibold">{userInfo.username}</p>
+              <p className="text-xl text-gray-400">
+                {userInfo.is_staff ? "Admin" : "User"}
+              </p>
             </div>
-          ) : (
-            <p className="text-xl text-gray-400">Guest</p>
-          )}
-        </div>
+          </div>
+        ) : (
+          <p className="text-xl text-gray-400">Guest</p>
+        )}
       </div>
     </aside>
   );

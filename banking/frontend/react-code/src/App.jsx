@@ -6,6 +6,7 @@ import AccountDetail from "./pages/AccountDetail";
 import UserManagement from "./pages/UserManagement";
 import TransactionsList from "./pages/TransactionsList";
 import TransactionDetail from "./pages/TransactionDetail";
+import BusinessList from "./pages/BusineseList";
 
 export default function App() {
   return (
@@ -18,6 +19,8 @@ export default function App() {
       <Route path="/users/:id" element={<UserManagement />} />
       <Route path="/transactions" element={<TransactionsList />} />
       <Route path="/transaction/:id" element={<TransactionDetail />} />
+      <Route path="/businesses" element={<BusinessList />} />
+
       {/* Add more routes as needed */}
     </Routes>
   );
