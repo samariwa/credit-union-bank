@@ -35,5 +35,6 @@ urlpatterns = [
     path('api/logout/', lambda request: Response({'detail': 'Successfully logged out.'}), name='logout'),
 
     # API endpoints (accounts, transactions, etc.)
-    path('api/', include(router.urls)),  # 👈 include router-generated paths like /api/transactions/
+    #path('api/', include(router.urls)),
+    path('api/', include('banking.backend.urls')),
 ]
