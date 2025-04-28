@@ -17,5 +17,8 @@
   "bugs": {
     "url": "https://github.com/samariwa/credit-union-bank/issues"
   },
-  "homepage": "https://github.com/samariwa/credit-union-bank#readme"
+  "homepage": "https://github.com/samariwa/credit-union-bank#readme",
+  "dependencies": {
+    "@heroicons/react": "^2.2.0"
+  }
 }
