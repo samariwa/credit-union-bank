@@ -13,12 +13,15 @@ const TransactionsList = () => {
     const fetchTransactions = async () => {
       try {
         const token = localStorage.getItem("access_token");
-        const response = await fetch("http://127.0.0.1:8000/api/transactions/", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
+        const response = await fetch(
+          "http://127.0.0.1:8000/api/transactions/",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
         if (!response.ok) {
           throw new Error(`Error: ${response.status}`);
@@ -51,21 +54,27 @@ const TransactionsList = () => {
       <Sidebar />
       <main className="flex-1 p-6 max-w-5xl mx-auto">
         <div className="mb-4">
-          <Breadcrumb
-            items={[
-              { label: "Transactions" },
-            ]}
-          />
+          <Breadcrumb items={[{ label: "Transactions" }]} />
         </div>
         <div className="bg-white shadow rounded-xl p-6">
           <h1 className="text-2xl font-bold mb-4">{activeTab}</h1>
           <div className="flex space-x-4 mb-4">
-            {["All Transactions", "Payment", "Withdrawal", "Deposit", "Collect Round_Up", "Transfer", "Roundup_Reclaim"].map((tab) => (
+            {[
+              "All Transactions",
+              "Payment",
+              "Withdrawal",
+              "Deposit",
+              "Collect Round_Up",
+              "Transfer",
+              "Roundup_Reclaim",
+            ].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`px-4 py-2 rounded ${
-                  activeTab === tab ? "bg-gray-800 text-white" : "bg-gray-200 text-gray-700"
+                  activeTab === tab
+                    ? "bg-gray-800 text-white"
+                    : "bg-gray-200 text-gray-700"
                 } hover:bg-gray-700 hover:text-white`}
               >
                 {tab}
@@ -77,14 +86,18 @@ const TransactionsList = () => {
               <tr className="border-b">
                 <th className="py-2 px-4 font-medium text-gray-700">Type</th>
                 <th className="py-2 px-4 font-medium text-gray-700">Amount</th>
-                <th className="py-2 px-4 font-medium text-gray-700">Timestamp</th>
+                <th className="py-2 px-4 font-medium text-gray-700">
+                  Timestamp
+                </th>
                 <th className="py-2 px-4 font-medium text-gray-700">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredTransactions.map((txn) => (
                 <tr key={txn.id} className="border-b hover:bg-gray-50">
-                  <td className="py-2 px-4 text-gray-700">{txn.transaction_type}</td>
+                  <td className="py-2 px-4 text-gray-700">
+                    {txn.transaction_type}
+                  </td>
                   <td className="py-2 px-4 text-gray-700">£{txn.amount}</td>
                   <td className="py-2 px-4 text-gray-700">
                     {new Date(txn.timestamp).toLocaleString()}

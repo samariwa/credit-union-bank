@@ -22,9 +22,7 @@ const navItems = [
   { icon: FileText, label: "Transactions", to: "/transactions" },
   { icon: Briefcase, label: "Businesses", to: "/businesses" },
   { icon: User, label: "Profile", to: "/profile" },
-  { icon: Settings, label: "Settings", to: "/settings" },
   { icon: Shield, label: "Security", to: "/security" },
-  { icon: HelpCircle, label: "Help", to: "/help" },
 ];
 
 export default function Sidebar() {

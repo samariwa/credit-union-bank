@@ -35,6 +35,14 @@ const BusinessList = () => {
     fetchBusinesses();
   }, []);
 
+  const categories = [
+    "All Businesses",
+    "Retail",
+    "Food",
+    "Technology",
+    "Finance",
+  ];
+
   useEffect(() => {
     if (activeTab === "All Businesses") {
       setFilteredBusinesses(businesses);
@@ -45,7 +53,7 @@ const BusinessList = () => {
   }, [activeTab, businesses]);
 
   const handleCardClick = (id) => {
-    navigate(`/business/${id}`);
+    navigate(`/businesses/${id}`);
   };
 
   return (
@@ -58,13 +66,7 @@ const BusinessList = () => {
         <div className="bg-white shadow rounded-xl p-6">
           <h1 className="text-2xl font-bold mb-4">{activeTab}</h1>
           <div className="flex space-x-4 mb-4">
-            {[
-              "All Businesses",
-              "Retail",
-              "Finance",
-              "Healthcare",
-              "Technology",
-            ].map((tab) => (
+            {categories.map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -83,11 +85,9 @@ const BusinessList = () => {
               <tr className="border-b">
                 <th className="py-2 px-4 font-medium text-gray-700">ID</th>
                 <th className="py-2 px-4 font-medium text-gray-700">Name</th>
-                <th className="py-2 px-4 font-medium text-gray-700">Owner</th>
                 <th className="py-2 px-4 font-medium text-gray-700">
                   Category
                 </th>
-                <th className="py-2 px-4 font-medium text-gray-700">Revenue</th>
                 <th className="py-2 px-4 font-medium text-gray-700">Actions</th>
               </tr>
             </thead>
@@ -96,9 +96,7 @@ const BusinessList = () => {
                 <tr key={biz.id} className="border-b hover:bg-gray-50">
                   <td className="py-2 px-4 text-gray-700">{biz.id}</td>
                   <td className="py-2 px-4 text-gray-700">{biz.name}</td>
-                  <td className="py-2 px-4 text-gray-700">{biz.owner_name}</td>
                   <td className="py-2 px-4 text-gray-700">{biz.category}</td>
-                  <td className="py-2 px-4 text-gray-700">£{biz.revenue}</td>
                   <td className="py-2 px-4 text-gray-700">
                     <button
                       onClick={() => handleCardClick(biz.id)}

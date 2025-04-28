@@ -136,7 +136,12 @@ class TransactionViewSet(viewsets.ModelViewSet):
     serializer_class = TransactionSerializer
     
     def get_queryset(self):
-        # Return transactions for accounts owned by the user
+        # Filter transactions by business if a business ID is provided in the query params
+        business_id = self.request.query_params.get('business', None)
+        if business_id:
+            return Transaction.objects.filter(business_id=business_id)
+
+        # Default behavior: return transactions for accounts owned by the user
         if self.request.user.is_authenticated:
             if self.request.user.is_staff:
                 return Transaction.objects.all()
