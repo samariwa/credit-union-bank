@@ -18,12 +18,10 @@ import { useEffect, useState } from "react";
 const navItems = [
   { icon: Home, label: "Dashboard", to: "/dashboard" },
   { icon: BarChart2, label: "Analytics", to: "/analytics" },
-  { icon: Wallet, label: "Wallet", to: "/wallet" },
   { icon: CreditCard, label: "Accounts", to: "/accounts" },
   { icon: FileText, label: "Transactions", to: "/transactions" },
   { icon: Briefcase, label: "Businesses", to: "/businesses" },
   { icon: User, label: "Users", to: "/users" },
-  { icon: Shield, label: "Security", to: "/security" },
 ];
 
 export default function Sidebar() {
