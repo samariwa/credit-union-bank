@@ -54,7 +54,7 @@ export default function Sidebar() {
   }, []);
 
   return (
-    <aside className="w-[400px] h-screen bg-black text-white flex flex-col justify-between py-6 px-4">
+    <aside className="w-[300px] h-screen bg-black text-white flex flex-col justify-between py-6 px-4">
       <div>
         <div className="flex items-center justify-center mb-10">
           <img
