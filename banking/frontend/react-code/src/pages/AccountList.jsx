@@ -125,9 +125,7 @@ const AccountList = () => {
               {filteredAccounts.map((acc) => (
                 <tr key={acc.id} className="border-b hover:bg-gray-50">
                   <td className="py-2 px-4 text-gray-700">{acc.id}</td>
-                  <td className="py-2 px-4 text-gray-700">
-                    {acc.user_details.first_name} {acc.user_details.last_name}
-                  </td>
+                  <td className="py-2 px-4 text-gray-700">{acc.name}</td>
                   <td className="py-2 px-4 text-gray-700">{acc.user_details.username}</td>
                   <td className="py-2 px-4 text-gray-700">{acc.account_type_display}</td>
                   <td className="py-2 px-4 text-gray-700">£{acc.starting_balance}</td>

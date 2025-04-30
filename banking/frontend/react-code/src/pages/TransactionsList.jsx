@@ -101,21 +101,29 @@ const TransactionsList = () => {
   const fetchBusinessSuggestions = async (query) => {
     try {
       const token = localStorage.getItem("access_token");
-      const response = await fetch(`http://127.0.0.1:8000/api/businesses/?name__icontains=${query}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/businesses/?name__icontains=${query}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!response.ok) {
-        throw new Error(`Error fetching business suggestions: ${response.status}`);
+        throw new Error(
+          `Error fetching business suggestions: ${response.status}`
+        );
       }
 
       const data = await response.json();
-      setBusinessSuggestions(data.filter((biz, index, self) =>
-        index === self.findIndex((t) => t.name === biz.name)
-      )); // Remove duplicates
+      setBusinessSuggestions(
+        data.filter(
+          (biz, index, self) =>
+            index === self.findIndex((t) => t.name === biz.name)
+        )
+      ); // Remove duplicates
     } catch (error) {
       console.error("Failed to fetch business suggestions:", error);
     }
@@ -160,7 +168,9 @@ const TransactionsList = () => {
   };
 
   const handleBusinessSelect = (businessName) => {
-    const selectedBusiness = businessSuggestions.find((biz) => biz.name === businessName);
+    const selectedBusiness = businessSuggestions.find(
+      (biz) => biz.name === businessName
+    );
     if (selectedBusiness) {
       setBusiness(`${selectedBusiness.id} (${selectedBusiness.name})`); // Set the business ID with name in brackets
       setBusinessSuggestions([]); // Clear suggestions
@@ -361,8 +371,14 @@ const TransactionsList = () => {
                 <input
                   type="text"
                   value={toAccount}
-                  onChange={(e) => handleAccountInputChange(e, setToAccount, "to")}
-                  className={`w-full mt-1 px-4 py-2 border rounded-md ${transactionType !== "transfer" ? "bg-gray-200 text-gray-500 cursor-not-allowed" : "border-gray-300"}`}
+                  onChange={(e) =>
+                    handleAccountInputChange(e, setToAccount, "to")
+                  }
+                  className={`w-full mt-1 px-4 py-2 border rounded-md ${
+                    transactionType !== "transfer"
+                      ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                      : "border-gray-300"
+                  }`}
                   readOnly={transactionType !== "transfer"}
                 />
                 {toAccountSuggestions.length > 0 && (
@@ -383,12 +399,18 @@ const TransactionsList = () => {
               </div>
             </div>
             <div className="mb-4 relative">
-              <label className="block text-sm font-medium text-gray-700">Business (Optional)</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Business (Optional)
+              </label>
               <input
                 type="text"
                 value={business}
                 onChange={handleBusinessInputChange}
-                className={`w-full mt-1 px-4 py-2 border rounded-md ${transactionType !== "transfer" ? "bg-gray-200 text-gray-500 cursor-not-allowed" : "border-gray-300"}`}
+                className={`w-full mt-1 px-4 py-2 border rounded-md ${
+                  transactionType !== "transfer"
+                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                    : "border-gray-300"
+                }`}
                 readOnly={transactionType !== "transfer"}
               />
               {businessSuggestions.length > 0 && (
