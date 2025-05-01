@@ -14,7 +14,14 @@ const UserManagement = () => {
     const fetchUsers = async () => {
       try {
         const token = localStorage.getItem("access_token");
-        const response = await fetch("http://127.0.0.1:8000/api/user/", {
+        const user_info = JSON.parse(localStorage.getItem("user_info"));
+        const isAdmin = user_info.is_staff; // Directly access is_staff from user_info
+
+        const url = isAdmin
+          ? "http://127.0.0.1:8000/api/admin/all_users_and_accounts/"
+          : "http://127.0.0.1:8000/api/user/";
+
+        const response = await fetch(url, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -27,14 +34,20 @@ const UserManagement = () => {
 
         const data = await response.json();
 
-        if (data && data.user) {
+        if (isAdmin) {
+          const processedUsers = data.users.map((user) => ({
+            user,
+            accounts: data.accounts.filter(
+              (account) => account.user === user.id
+            ),
+          }));
+          setUsers(processedUsers);
+        } else if (data && data.user) {
           setUsers([{ user: data.user, accounts: data.accounts }]);
         } else {
-          console.error("Unexpected API response format:", data);
           setUsers([]); // Fallback to an empty array
         }
       } catch (error) {
-        console.error("Failed to fetch users:", error);
         setUsers([]); // Fallback to an empty array
       }
     };

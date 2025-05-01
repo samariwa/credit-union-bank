@@ -27,6 +27,16 @@ const navItems = [
 export default function Sidebar() {
   const userInfo = JSON.parse(localStorage.getItem("user_info"));
   const [users, setUsers] = useState([]);
+  const [isCardVisible, setIsCardVisible] = useState(false);
+
+  const toggleCardVisibility = () => {
+    setIsCardVisible(!isCardVisible);
+  };
+
+  const handleLogout = () => {
+    localStorage.clear();
+    window.location.href = "/login"; // Redirect to login page
+  };
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -53,6 +63,16 @@ export default function Sidebar() {
     fetchUsers();
   }, []);
 
+  const filteredNavItems = navItems.filter(({ label }) => {
+    if (
+      !userInfo.is_staff &&
+      (label === "Businesses" || label === "Users" || label === "Analytics")
+    ) {
+      return false; // Exclude "Businesses", "Users", and "Analytics" for non-admin users
+    }
+    return true;
+  });
+
   return (
     <aside className="w-[300px] h-screen bg-black text-white flex flex-col justify-between py-6 px-4">
       <div>
@@ -64,7 +84,7 @@ export default function Sidebar() {
           />
         </div>
         <nav className="space-y-2">
-          {navItems.map(({ icon: Icon, label, to }) => (
+          {filteredNavItems.map(({ icon: Icon, label, to }) => (
             <NavLink
               key={label}
               to={to}
@@ -92,23 +112,46 @@ export default function Sidebar() {
           </div>
         )}
       </div>
-      <div className="flex items-center gap-3 px-4">
-        {userInfo ? (
-          <div className="flex items-center gap-3">
-            <img
-              src={avatar}
-              alt="User Avatar"
-              className="w-10 h-10 rounded-full object-cover"
-            />
-            <div>
-              <p className="text-3xl font-semibold">{userInfo.username}</p>
-              <p className="text-xl text-gray-400">
-                {userInfo.is_staff ? "Admin" : "User"}
-              </p>
+      <div className="relative">
+        <div
+          className="flex items-center gap-3 px-4 cursor-pointer"
+          onClick={toggleCardVisibility}
+        >
+          {userInfo ? (
+            <div className="flex items-center gap-3">
+              <img
+                src={avatar}
+                alt="User Avatar"
+                className="w-10 h-10 rounded-full object-cover"
+              />
+              <div>
+                <p className="text-3xl font-semibold">{userInfo.username}</p>
+                <p className="text-xl text-gray-400">
+                  {userInfo.is_staff ? "Admin" : "User"}
+                </p>
+              </div>
             </div>
+          ) : (
+            <p className="text-xl text-gray-400">Guest</p>
+          )}
+        </div>
+        {isCardVisible && (
+          <div className="absolute bottom-16 left-4 bg-white text-black shadow-lg rounded-md p-4 w-48">
+            <ul className="space-y-2">
+              <li
+                className="cursor-pointer hover:bg-gray-100 p-2 rounded"
+                onClick={() => (window.location.href = "/profile")}
+              >
+                Profile
+              </li>
+              <li
+                className="cursor-pointer hover:bg-gray-100 p-2 rounded"
+                onClick={handleLogout}
+              >
+                Logout
+              </li>
+            </ul>
           </div>
-        ) : (
-          <p className="text-xl text-gray-400">Guest</p>
         )}
       </div>
     </aside>

@@ -5,11 +5,14 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .views import AccountViewSet, TransactionViewSet, BusinessViewSet
+from .views import AccountViewSet, TransactionViewSet, BusinessViewSet, get_all_users_and_accounts, UserProfileView, UserUpdateView
 from .auth_views import LoginView, UserAccountsView
 from .test_view import TestView
 import logging
 import traceback
+from django.contrib.auth.models import User
+from rest_framework import status
+from rest_framework.exceptions import ValidationError
 
 # Highly simplified registration view to test routing
 class SimpleRegisterView(APIView):
@@ -17,7 +20,35 @@ class SimpleRegisterView(APIView):
         return Response({"message": "Simple registration view GET works!"})
     
     def post(self, request, *args, **kwargs):
-        return Response({"message": "Simple registration view POST works!", "data": request.data})
+        try:
+            username = request.data.get("username")
+            password = request.data.get("password")
+            email = request.data.get("email")
+            first_name = request.data.get("first_name")
+            last_name = request.data.get("last_name")
+
+            if not username or not password or not email:
+                raise ValidationError("Username, password, and email are required.")
+
+            if not first_name or not last_name:
+                raise ValidationError("First name and last name are required.")
+
+            if User.objects.filter(username=username).exists():
+                raise ValidationError("Username already exists.")
+
+            user = User.objects.create_user(
+                username=username,
+                password=password,
+                email=email,
+                first_name=first_name,
+                last_name=last_name
+            )
+
+            return Response({"message": "User registered successfully.", "user_id": user.id}, status=status.HTTP_201_CREATED)
+        except ValidationError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": "An unexpected error occurred."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 router = DefaultRouter()
 router.register(r'accounts', AccountViewSet, basename='account')
@@ -66,4 +97,7 @@ urlpatterns += [
     path('debug_shell/', debug_shell),
     # Additional diagnostic endpoint
     path('url-test/', lambda request: JsonResponse({"message": "Banking URLs are being loaded correctly"})),
+    path('admin/all_users_and_accounts/', get_all_users_and_accounts, name='all-users-and-accounts'),
+    path('user/profile/', UserProfileView.as_view(), name='user-profile'),
+    path('user/update/', UserUpdateView.as_view(), name='user-update'),
 ]

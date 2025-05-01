@@ -2,7 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from django.db import models
 from django.db.models import Sum
 from django.contrib.auth.models import User
@@ -244,3 +244,69 @@ class BusinessViewSet(viewsets.ModelViewSet):
             return [IsAuthenticated()]
         # For write operations, require admin privileges
         return [IsAdminUser()]
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def get_all_users_and_accounts(request):
+    """
+    Endpoint to retrieve all users and their associated accounts.
+    Accessible only by admin users.
+    """
+    users = User.objects.all()
+    accounts = Account.objects.all()
+
+    user_data = [
+        {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "is_staff": user.is_staff,  # Added is_staff field
+        }
+        for user in users
+    ]
+
+    account_serializer = AccountSerializer(accounts, many=True)
+
+    return Response({
+        "users": user_data,
+        "accounts": account_serializer.data,
+    })
+
+
+class UserProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        """
+        Retrieve the profile details of the currently authenticated user.
+        """
+        user = request.user
+        return Response({
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "email": user.email,
+            "username": user.username
+        }, status=status.HTTP_200_OK)
+
+
+class UserUpdateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request):
+        user = request.user
+        data = request.data
+
+        user.first_name = data.get("first_name", user.first_name)
+        user.last_name = data.get("last_name", user.last_name)
+        user.username = data.get("username", user.username)
+
+        user.save()
+
+        return Response({
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "username": user.username,
+        }, status=status.HTTP_200_OK)

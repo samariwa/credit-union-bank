@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from .models import Account
 from decimal import Decimal
+from django.views.decorators.csrf import csrf_exempt
 
 class TemplateRegistrationView(View):
     """
@@ -102,6 +103,7 @@ class TemplateRegistrationView(View):
             return render(request, self.template_name, {})
 
 # API-style functions that don't require REST framework
+@csrf_exempt
 def register_api(request):
     """
     Simple API-style registration function that uses Django's HttpResponse.
