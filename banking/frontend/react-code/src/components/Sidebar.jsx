@@ -59,22 +59,11 @@ export default function Sidebar() {
         console.error("Failed to fetch users:", error);
       }
     };
-
     fetchUsers();
   }, []);
 
-  const filteredNavItems = navItems.filter(({ label }) => {
-    if (
-      !userInfo.is_staff &&
-      (label === "Businesses" || label === "Users" || label === "Analytics")
-    ) {
-      return false; // Exclude "Businesses", "Users", and "Analytics" for non-admin users
-    }
-    return true;
-  });
-
   return (
-    <aside className="w-[300px] h-screen bg-black text-white flex flex-col justify-between py-6 px-4">
+    <aside className="fixed top-0 left-0 w-[300px] h-screen bg-black text-white flex flex-col justify-between py-6 px-4">
       <div>
         <div className="flex items-center justify-center mb-10">
           <img
@@ -84,7 +73,7 @@ export default function Sidebar() {
           />
         </div>
         <nav className="space-y-2">
-          {filteredNavItems.map(({ icon: Icon, label, to }) => (
+          {navItems.map(({ icon: Icon, label, to }) => (
             <NavLink
               key={label}
               to={to}
@@ -99,26 +88,14 @@ export default function Sidebar() {
             </NavLink>
           ))}
         </nav>
-        {users.length > 0 && (
-          <div className="mt-6">
-            <h2 className="text-xl font-semibold mb-4">Users</h2>
-            <ul className="space-y-2">
-              {users.map((user) => (
-                <li key={user.user.id} className="text-gray-400">
-                  {user.user.username} ({user.user.email})
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
       </div>
-      <div className="relative">
-        <div
-          className="flex items-center gap-3 px-4 cursor-pointer"
-          onClick={toggleCardVisibility}
-        >
-          {userInfo ? (
-            <div className="flex items-center gap-3">
+      <div className="absolute bottom-4 left-4">
+        {userInfo && (
+          <div className="relative">
+            <div
+              className="flex items-center gap-3 cursor-pointer"
+              onClick={toggleCardVisibility}
+            >
               <img
                 src={avatar}
                 alt="User Avatar"
@@ -131,26 +108,22 @@ export default function Sidebar() {
                 </p>
               </div>
             </div>
-          ) : (
-            <p className="text-xl text-gray-400">Guest</p>
-          )}
-        </div>
-        {isCardVisible && (
-          <div className="absolute bottom-16 left-4 bg-white text-black shadow-lg rounded-md p-4 w-48">
-            <ul className="space-y-2">
-              <li
-                className="cursor-pointer hover:bg-gray-100 p-2 rounded"
-                onClick={() => (window.location.href = "/profile")}
-              >
-                Profile
-              </li>
-              <li
-                className="cursor-pointer hover:bg-gray-100 p-2 rounded"
-                onClick={handleLogout}
-              >
-                Logout
-              </li>
-            </ul>
+            {isCardVisible && (
+              <div className="absolute bottom-full mb-2 right-[-30px] bg-white text-black shadow-lg rounded-md w-48">
+                <button
+                  className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                  onClick={() => (window.location.href = "/profile")}
+                >
+                  Profile
+                </button>
+                <button
+                  className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

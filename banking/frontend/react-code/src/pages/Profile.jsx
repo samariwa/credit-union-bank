@@ -88,7 +88,7 @@ const Profile = () => {
   return (
     <div className="flex min-h-screen text-white bg-[#0f0f0f]">
       <Sidebar />
-      <main className="flex-1 p-6 max-w-5xl mx-auto">
+      <main className="flex-1 p-6 max-w-5xl mx-auto relative ml-[400px]">
         <div className="mb-4">
           <Breadcrumb items={[{ label: "Profile" }]} />
         </div>

@@ -10,7 +10,7 @@ export default function DashboardLayout() {
     <div className="flex min-h-screen text-white bg-[#0f0f0f]">
       <Sidebar />
 
-      <main className="flex-1 p-6 overflow-y-auto grid grid-cols-[2fr_1.2fr] gap-6">
+      <main className="flex-1 p-6 overflow-y-auto grid grid-cols-[2fr_1.2fr] gap-6 ml-[300px]">
         {/* Left Column */}
         <div className="flex flex-col justify-between h-full">
           <div className="flex flex-col gap-6">

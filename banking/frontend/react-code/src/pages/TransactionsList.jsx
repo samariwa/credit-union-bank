@@ -16,6 +16,12 @@ const TransactionsList = () => {
   const [fromAccountSuggestions, setFromAccountSuggestions] = useState([]);
   const [toAccountSuggestions, setToAccountSuggestions] = useState([]);
   const [businessSuggestions, setBusinessSuggestions] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [businessReadOnly, setBusinessReadOnly] = useState(false);
+  const [toAccountReadOnly, setToAccountReadOnly] = useState(false);
+  const [fromAccountReadOnly, setFromAccountReadOnly] = useState(false);
+  const itemsPerPage = 10;
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -58,11 +64,37 @@ const TransactionsList = () => {
     }
   }, [activeTab, transactions]);
 
+  useEffect(() => {
+    if (transactionType === "payment") {
+      setBusinessReadOnly(false);
+      setFromAccountReadOnly(false); // Allow selecting the 'from' account
+      setToAccountReadOnly(true);
+    } else if (transactionType === "transfer") {
+      setBusinessReadOnly(true);
+      setToAccountReadOnly(false);
+      setFromAccountReadOnly(false);
+    } else if (transactionType === "withdrawal") {
+      setBusinessReadOnly(true);
+      setToAccountReadOnly(true);
+      setFromAccountReadOnly(false);
+    } else if (transactionType === "deposit") {
+      setBusinessReadOnly(true);
+      setToAccountReadOnly(false);
+      setFromAccountReadOnly(true);
+    } else {
+      setBusinessReadOnly(false);
+      setToAccountReadOnly(false);
+      setFromAccountReadOnly(false);
+    }
+  }, [transactionType]);
+
   const fetchAccountSuggestions = async (query, type) => {
     try {
       const token = localStorage.getItem("access_token");
+      const sanctionedFilter =
+        transactionType === "payment" ? "&sanctioned=false" : "";
       const response = await fetch(
-        `http://127.0.0.1:8000/api/accounts/?name__icontains=${query}&type=${type}`,
+        `http://127.0.0.1:8000/api/accounts/?name__icontains=${query}&type=${type}${sanctionedFilter}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -102,7 +134,7 @@ const TransactionsList = () => {
     try {
       const token = localStorage.getItem("access_token");
       const response = await fetch(
-        `http://127.0.0.1:8000/api/businesses/?name__icontains=${query}`,
+        `http://127.0.0.1:8000/api/businesses/?name__icontains=${query}&sanctioned=false`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -188,7 +220,7 @@ const TransactionsList = () => {
       const toAccountId = toAccount ? extractId(toAccount) : null;
       const businessId = business ? extractId(business) : null;
 
-      if (!fromAccountId) {
+      if (transactionType !== "deposit" && !fromAccountId) {
         alert("Invalid 'From Account' name.");
         return;
       }
@@ -222,83 +254,135 @@ const TransactionsList = () => {
     }
   };
 
+  const paginatedTransactions = filteredTransactions.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="flex-1 p-6 max-w-5xl mx-auto">
-        <div className="mb-4">
-          <Breadcrumb items={[{ label: "Transactions" }]} />
-        </div>
-        <div className="bg-white shadow rounded-xl p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-bold">{activeTab}</h1>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="flex items-center px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 hover:text-gray-800"
-            >
-              <span className="mr-2 text-xl">+</span> New Transaction
-            </button>
+      <div className="flex-1 ml-[300px]">
+        <main className="p-6 max-w-5xl mx-auto">
+          <div className="mb-4">
+            <Breadcrumb items={[{ label: "Transactions" }]} />
           </div>
-          <div className="flex space-x-4 mb-4">
-            {[
-              "All Transactions",
-              "Payment",
-              "Withdrawal",
-              "Deposit",
-              "Collect Round_Up",
-              "Transfer",
-              "Roundup_Reclaim",
-            ].map((tab) => (
+          <div className="bg-white shadow rounded-xl p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h1 className="text-2xl font-bold">{activeTab}</h1>
               <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 rounded ${
-                  activeTab === tab
-                    ? "bg-gray-800 text-white"
-                    : "bg-gray-200 text-gray-700"
-                } hover:bg-gray-700 hover:text-white`}
+                onClick={() => setIsModalOpen(true)}
+                className="flex items-center px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 hover:text-gray-800"
               >
-                {tab}
+                <span className="mr-2 text-xl">+</span> New Transaction
               </button>
-            ))}
-          </div>
-          <table className="table-auto w-[95%] text-left border-collapse mx-auto">
-            <thead>
-              <tr className="border-b">
-                <th className="py-2 px-4 font-medium text-gray-700">#</th>
-                <th className="py-2 px-4 font-medium text-gray-700">Type</th>
-                <th className="py-2 px-4 font-medium text-gray-700">Amount</th>
-                <th className="py-2 px-4 font-medium text-gray-700">
-                  Timestamp
-                </th>
-                <th className="py-2 px-4 font-medium text-gray-700">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredTransactions.map((txn) => (
-                <tr key={txn.id} className="border-b hover:bg-gray-50">
-                  <td className="py-2 px-4 text-gray-700">{txn.id}</td>
-                  <td className="py-2 px-4 text-gray-700">
-                    {txn.transaction_type}
-                  </td>
-                  <td className="py-2 px-4 text-gray-700">£{txn.amount}</td>
-                  <td className="py-2 px-4 text-gray-700">
-                    {new Date(txn.timestamp).toLocaleString()}
-                  </td>
-                  <td className="py-2 px-4 text-gray-700">
-                    <button
-                      onClick={() => navigate(`/transaction/${txn.id}`)}
-                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 hover:text-gray-800"
-                    >
-                      View
-                    </button>
-                  </td>
-                </tr>
+            </div>
+            <div className="flex space-x-4 mb-4">
+              {[
+                "All Transactions",
+                "Payment",
+                "Withdrawal",
+                "Deposit",
+                "Collect Round_Up",
+                "Transfer",
+                "Roundup_Reclaim",
+              ].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-4 py-2 rounded ${
+                    activeTab === tab
+                      ? "bg-gray-800 text-white"
+                      : "bg-gray-200 text-gray-700"
+                  } hover:bg-gray-700 hover:text-white`}
+                >
+                  {tab}
+                </button>
               ))}
-            </tbody>
-          </table>
-        </div>
-      </main>
+            </div>
+            <table className="table-auto w-[80%] text-left border-collapse mx-auto">
+              <thead>
+                <tr className="border-b">
+                  <th className="py-2 px-4 font-medium text-gray-700">#</th>
+                  <th className="py-2 px-4 font-medium text-gray-700">Type</th>
+                  <th className="py-2 px-4 font-medium text-gray-700">
+                    Amount
+                  </th>
+                  <th className="py-2 px-4 font-medium text-gray-700">
+                    Timestamp
+                  </th>
+                  <th className="py-2 px-4 font-medium text-gray-700">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedTransactions.map((txn) => (
+                  <tr key={txn.id} className="border-b hover:bg-gray-50">
+                    <td className="py-2 px-4 text-gray-700">{txn.id}</td>
+                    <td className="py-2 px-4 text-gray-700">
+                      {txn.transaction_type}
+                    </td>
+                    <td className="py-2 px-4 text-gray-700">£{txn.amount}</td>
+                    <td className="py-2 px-4 text-gray-700">
+                      {new Date(txn.timestamp).toLocaleString()}
+                    </td>
+                    <td className="py-2 px-4 text-gray-700">
+                      <button
+                        onClick={() => navigate(`/transaction/${txn.id}`)}
+                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 hover:text-gray-800"
+                      >
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="flex justify-between items-center mt-4">
+              <button
+                onClick={handlePreviousPage}
+                disabled={currentPage === 1}
+                className={`px-4 py-2 rounded ${
+                  currentPage === 1
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300 hover:text-gray-800"
+                }`}
+              >
+                Previous
+              </button>
+              <span className="text-gray-700">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages}
+                className={`px-4 py-2 rounded ${
+                  currentPage === totalPages
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300 hover:text-gray-800"
+                }`}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </main>
+      </div>
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white rounded-xl p-6 max-w-6xl w-full">
@@ -345,7 +429,14 @@ const TransactionsList = () => {
                   onChange={(e) =>
                     handleAccountInputChange(e, setFromAccount, "from")
                   }
-                  className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md"
+                  className={`w-full mt-1 px-4 py-2 border rounded-md ${
+                    transactionType === "deposit" || fromAccountReadOnly
+                      ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                      : "border-gray-300"
+                  }`}
+                  readOnly={
+                    transactionType === "deposit" || fromAccountReadOnly
+                  }
                 />
                 {fromAccountSuggestions.length > 0 && (
                   <ul className="absolute z-10 bg-white border border-gray-300 rounded-md mt-1 w-full max-h-40 overflow-y-auto">
@@ -375,11 +466,11 @@ const TransactionsList = () => {
                     handleAccountInputChange(e, setToAccount, "to")
                   }
                   className={`w-full mt-1 px-4 py-2 border rounded-md ${
-                    transactionType !== "transfer"
+                    toAccountReadOnly
                       ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                       : "border-gray-300"
                   }`}
-                  readOnly={transactionType !== "transfer"}
+                  readOnly={toAccountReadOnly}
                 />
                 {toAccountSuggestions.length > 0 && (
                   <ul className="absolute z-10 bg-white border border-gray-300 rounded-md mt-1 w-full max-h-40 overflow-y-auto">
@@ -407,11 +498,11 @@ const TransactionsList = () => {
                 value={business}
                 onChange={handleBusinessInputChange}
                 className={`w-full mt-1 px-4 py-2 border rounded-md ${
-                  transactionType !== "transfer"
+                  businessReadOnly
                     ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                     : "border-gray-300"
                 }`}
-                readOnly={transactionType !== "transfer"}
+                readOnly={businessReadOnly}
               />
               {businessSuggestions.length > 0 && (
                 <ul className="absolute z-10 bg-white border border-gray-300 rounded-md mt-1 w-full max-h-40 overflow-y-auto">

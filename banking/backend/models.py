@@ -13,6 +13,7 @@ class Account(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100)
     starting_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    current_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     round_up_enabled = models.BooleanField(default=False)
     postcode = models.CharField(max_length=10, null=True, blank=True)
     round_up_pot = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
@@ -20,6 +21,13 @@ class Account(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='accounts', null=True, blank=True)
     # Add account type field
     account_type = models.CharField(max_length=20, choices=ACCOUNT_TYPES, default='current')
+
+    def save(self, *args, **kwargs):
+        if not self.pk:  # If the account is being created
+            self.current_balance = self.starting_balance
+        if not self.user.is_staff:  # Check if the user is not an admin
+            self.starting_balance = None  # Remove starting balance for non-admin users
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -45,7 +53,7 @@ class Transaction(models.Model):
 
     transaction_type = models.CharField(max_length=20, choices=TRANSACTION_TYPES)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    from_account = models.ForeignKey(Account, related_name='outgoing_transactions', on_delete=models.CASCADE)
+    from_account = models.ForeignKey(Account, related_name='outgoing_transactions', on_delete=models.CASCADE, null=True, blank=True)
     to_account = models.ForeignKey(Account, related_name='incoming_transactions', on_delete=models.CASCADE, null=True, blank=True)
     business = models.ForeignKey(Business, related_name='transactions', on_delete=models.CASCADE, null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)

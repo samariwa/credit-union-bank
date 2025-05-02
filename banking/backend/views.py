@@ -11,18 +11,13 @@ from .serializers import AccountSerializer, TransactionSerializer, BusinessSeria
 from decimal import Decimal
 import os
 import subprocess
+import logging
 
 class UserRegistrationView(APIView):
     permission_classes = [AllowAny]
     
     def post(self, request, *args, **kwargs):
         # Extract user data from request
-        username = request.data.get('username')
-        password = request.data.get('password')
-        email = request.data.get('email', '')
-        first_name = request.data.get('first_name', '')
-        last_name = request.data.get('last_name', '')
-        
         # Validate required fields
         if not username or not password:
             return Response(
@@ -157,21 +152,92 @@ class TransactionViewSet(viewsets.ModelViewSet):
         return [IsAuthenticated()]
     
     def perform_create(self, serializer):
-        # When creating a transaction, validate that the user owns the from_account
+        def extract_account_id(value):
+            # Extract the ID before the first space or parenthesis
+            return value.split()[0] if value else None
+
+        logging.info(f"Incoming request payload: {self.request.data}")
+        transaction_type = self.request.data.get('transaction_type')
+        amount = Decimal(self.request.data.get('amount', '0'))
         from_account_id = self.request.data.get('from_account')
-        
+        to_account_id = self.request.data.get('to_account')
+
+        from_account_id = extract_account_id(from_account_id)
+        to_account_id = extract_account_id(to_account_id)
+
+        logging.info(f"Transaction Type: {transaction_type}, Amount: {amount}, From Account ID: {from_account_id}, To Account ID: {to_account_id}")
+
         try:
-            from_account = Account.objects.get(id=from_account_id)
-            
-            # Check if the user is authorized for this account
-            if from_account.user != self.request.user and not self.request.user.is_staff:
-                raise PermissionError("You don't have permission to create transactions for this account")
-                
+            if transaction_type in ['withdrawal', 'payment', 'transfer']:
+                if not from_account_id:
+                    logging.error(f"{transaction_type.capitalize()} transaction missing 'from_account_id'.")
+                    raise ValueError("'from_account_id' is required for this transaction type.")
+
+                try:
+                    from_account = Account.objects.get(id=from_account_id)
+                except Account.DoesNotExist:
+                    logging.error(f"Account with ID {from_account_id} does not exist for {transaction_type} transaction.")
+                    raise ValueError("Account not found for this transaction.")
+
+                if from_account.current_balance < amount:
+                    logging.error(f"Insufficient funds for {transaction_type} transaction. Current balance: {from_account.current_balance}, Attempted amount: {amount}.")
+                    raise ValueError("Insufficient funds for this transaction.")
+
+            if transaction_type == 'withdrawal':
+                from_account.current_balance -= amount
+                from_account.save()
+
+            elif transaction_type == 'deposit':
+                from_account_id = None  # Ignore from_account for deposits
+                if not to_account_id:
+                    logging.error("Deposit transaction missing 'to_account_id'.")
+                    raise ValueError("'to_account_id' is required for deposit transactions.")
+
+                try:
+                    to_account = Account.objects.get(id=to_account_id)
+                except Account.DoesNotExist:
+                    logging.error(f"Account with ID {to_account_id} does not exist for deposit transaction.")
+                    raise ValueError("Account not found for deposit transaction.")
+
+                logging.info(f"To Account ID: {to_account_id}, Initial Balance: {to_account.current_balance}")
+                to_account.current_balance += amount
+                to_account.save()
+                logging.info(f"To Account ID: {to_account_id}, Updated Balance: {to_account.current_balance}")
+
+            elif transaction_type == 'transfer':
+                from_account = Account.objects.get(id=from_account_id)
+                to_account = Account.objects.get(id=to_account_id)
+                from_account.current_balance -= amount
+                to_account.current_balance += amount
+                from_account.save()
+                to_account.save()
+
+            elif transaction_type == 'payment':
+                if not from_account_id:
+                    logging.error("Payment transaction missing 'from_account_id'.")
+                    raise ValueError("'from_account_id' is required for payment transactions.")
+
+                try:
+                    from_account = Account.objects.get(id=from_account_id)
+                except Account.DoesNotExist:
+                    logging.error(f"Account with ID {from_account_id} does not exist for payment transaction.")
+                    raise ValueError("Account not found for payment transaction.")
+
+                logging.info(f"From Account ID: {from_account_id}, Initial Balance: {from_account.current_balance}")
+                from_account.current_balance -= amount
+                if from_account.current_balance < 0:
+                    logging.error("Insufficient funds for payment transaction.")
+                    raise ValueError("Insufficient funds for payment transaction.")
+                from_account.save()
+                logging.info(f"From Account ID: {from_account_id}, Updated Balance: {from_account.current_balance}")
+
             serializer.save()
         except Account.DoesNotExist:
+            logging.error(f"Account not found. From Account ID: {from_account_id}, To Account ID: {to_account_id}")
             raise ValueError("Account not found")
-        except PermissionError as e:
-            raise PermissionError(str(e))
+        except Exception as e:
+            logging.error(f"Error processing transaction: {str(e)}")
+            raise ValueError(f"Error processing transaction: {str(e)}")
 
     @action(detail=False, methods=['get'], url_path='account/(?P<account_id>[^/.]+)')
     def account_transactions(self, request, account_id=None):

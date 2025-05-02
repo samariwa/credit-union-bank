@@ -10,7 +10,28 @@ const BusinessList = () => {
   const [isBusinessModalOpen, setIsBusinessModalOpen] = useState(false);
   const [businessName, setBusinessName] = useState("");
   const [businessCategory, setBusinessCategory] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const navigate = useNavigate();
+
+  const paginatedBusinesses = filteredBusinesses.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const totalPages = Math.ceil(filteredBusinesses.length / itemsPerPage);
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
   useEffect(() => {
     const fetchBusinesses = async () => {
@@ -98,7 +119,6 @@ const BusinessList = () => {
           id: nextId, // Use the next ID
           name: businessName,
           category: businessCategory,
-          sanctioned: false,
         }),
       });
 
@@ -122,66 +142,97 @@ const BusinessList = () => {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="flex-1 p-6 max-w-5xl mx-auto">
-        <div className="mb-4">
-          <Breadcrumb items={[{ label: "Businesses" }]} />
-        </div>
-        <div className="bg-white shadow rounded-xl p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-bold">{activeTab}</h1>
-            <button
-              onClick={() => setIsBusinessModalOpen(true)}
-              className="flex items-center px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 hover:text-gray-800"
-            >
-              <span className="mr-2 text-xl">+</span> New Business
-            </button>
+      <div className="flex-1 ml-[300px]">
+        <main className="p-6 max-w-5xl mx-auto">
+          <div className="mb-4">
+            <Breadcrumb items={[{ label: "Businesses" }]} />
           </div>
-          <div className="flex space-x-4 mb-4">
-            {categories.map((tab) => (
+          <div className="bg-white shadow rounded-xl p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h1 className="text-2xl font-bold">{activeTab}</h1>
               <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 rounded ${
-                  activeTab === tab
-                    ? "bg-gray-800 text-white"
-                    : "bg-gray-200 text-gray-700"
-                } hover:bg-gray-700 hover:text-white`}
+                onClick={() => setIsBusinessModalOpen(true)}
+                className="flex items-center px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 hover:text-gray-800"
               >
-                {tab}
+                <span className="mr-2 text-xl">+</span> New Business
               </button>
-            ))}
-          </div>
-          <table className="table-auto w-[95%] text-left border-collapse mx-auto">
-            <thead>
-              <tr className="border-b">
-                <th className="py-2 px-4 font-medium text-gray-700">ID</th>
-                <th className="py-2 px-4 font-medium text-gray-700">Name</th>
-                <th className="py-2 px-4 font-medium text-gray-700">
-                  Category
-                </th>
-                <th className="py-2 px-4 font-medium text-gray-700">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredBusinesses.map((biz) => (
-                <tr key={biz.id} className="border-b hover:bg-gray-50">
-                  <td className="py-2 px-4 text-gray-700">{biz.id}</td>
-                  <td className="py-2 px-4 text-gray-700">{biz.name}</td>
-                  <td className="py-2 px-4 text-gray-700">{biz.category}</td>
-                  <td className="py-2 px-4 text-gray-700">
-                    <button
-                      onClick={() => handleCardClick(biz.id)}
-                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 hover:text-gray-800"
-                    >
-                      View
-                    </button>
-                  </td>
-                </tr>
+            </div>
+            <div className="flex space-x-4 mb-4">
+              {categories.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-4 py-2 rounded ${
+                    activeTab === tab
+                      ? "bg-gray-800 text-white"
+                      : "bg-gray-200 text-gray-700"
+                  } hover:bg-gray-700 hover:text-white`}
+                >
+                  {tab}
+                </button>
               ))}
-            </tbody>
-          </table>
-        </div>
-      </main>
+            </div>
+            <table className="table-auto w-[80%] text-left border-collapse mx-auto">
+              <thead>
+                <tr className="border-b">
+                  <th className="py-2 px-4 font-medium text-gray-700">ID</th>
+                  <th className="py-2 px-4 font-medium text-gray-700">Name</th>
+                  <th className="py-2 px-4 font-medium text-gray-700">
+                    Category
+                  </th>
+                  <th className="py-2 px-4 font-medium text-gray-700">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedBusinesses.map((biz) => (
+                  <tr key={biz.id} className="border-b hover:bg-gray-50">
+                    <td className="py-2 px-4 text-gray-700">{biz.id}</td>
+                    <td className="py-2 px-4 text-gray-700">{biz.name}</td>
+                    <td className="py-2 px-4 text-gray-700">{biz.category}</td>
+                    <td className="py-2 px-4 text-gray-700">
+                      <button
+                        onClick={() => handleCardClick(biz.id)}
+                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 hover:text-gray-800"
+                      >
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="flex justify-between items-center mt-4">
+              <button
+                onClick={handlePreviousPage}
+                disabled={currentPage === 1}
+                className={`px-4 py-2 rounded ${
+                  currentPage === 1
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300 hover:text-gray-800"
+                }`}
+              >
+                Previous
+              </button>
+              <span className="text-gray-700">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages}
+                className={`px-4 py-2 rounded ${
+                  currentPage === totalPages
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300 hover:text-gray-800"
+                }`}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </main>
+      </div>
 
       {isBusinessModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">

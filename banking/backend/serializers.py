@@ -17,7 +17,7 @@ class AccountSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'starting_balance', 'round_up_enabled', 
             'postcode', 'user', 'user_details', 'account_type', 
-            'account_type_display', 'round_up_pot'
+            'account_type_display', 'round_up_pot', 'current_balance'
         ]
         
 class TransactionSerializer(serializers.ModelSerializer):

@@ -82,6 +82,7 @@ const BusinessDetail = () => {
           body: JSON.stringify({
             name: editName,
             category: editCategory,
+            sanctioned: business.sanctioned, // Ensure sanctioned is included in the payload
           }),
         }
       );
@@ -93,8 +94,41 @@ const BusinessDetail = () => {
       const updatedBusiness = await response.json();
       setBusiness(updatedBusiness);
       setIsEditModalOpen(false);
+      window.location.reload(); // Refresh the page after saving
     } catch (error) {
       console.error("Failed to update business details:", error);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (
+      window.confirm(
+        "Are you sure you want to delete this business? This action cannot be undone."
+      )
+    ) {
+      try {
+        const token = localStorage.getItem("access_token");
+        const response = await fetch(
+          `http://127.0.0.1:8000/api/businesses/${id}/`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status}`);
+        }
+
+        alert("Business deleted successfully.");
+        navigate("/businesses");
+      } catch (error) {
+        console.error("Failed to delete business:", error);
+        alert("An error occurred. Please try again.");
+      }
     }
   };
 
@@ -104,7 +138,7 @@ const BusinessDetail = () => {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <div className="flex-1 p-6 max-w-4xl mx-auto relative">
+      <div className="flex-1 p-6 max-w-5xl mx-auto relative ml-[400px]">
         <Breadcrumb
           items={[
             { label: "Businesses", to: "/businesses" },
@@ -113,16 +147,24 @@ const BusinessDetail = () => {
         />
         <div className="flex items-center justify-between mb-4">
           <BackButton to="/businesses" />
-          <button
-            onClick={() => {
-              setEditName(business.name);
-              setEditCategory(business.category);
-              setIsEditModalOpen(true);
-            }}
-            className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 hover:text-gray-800"
-          >
-            Edit
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                setEditName(business.name);
+                setEditCategory(business.category);
+                setIsEditModalOpen(true);
+              }}
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 hover:text-gray-800"
+            >
+              Edit
+            </button>
+            <button
+              onClick={handleDelete}
+              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+            >
+              Delete
+            </button>
+          </div>
         </div>
 
         <div className="bg-white shadow rounded-xl p-6 mb-6">
@@ -222,6 +264,28 @@ const BusinessDetail = () => {
                 onChange={(e) => setEditCategory(e.target.value)}
                 className="w-full border px-3 py-2 rounded"
               />
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700 font-medium mb-2">
+                Sanctioned
+              </label>
+              <div className="flex items-center">
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={business.sanctioned}
+                    onChange={(e) =>
+                      setBusiness((prev) => ({
+                        ...prev,
+                        sanctioned: e.target.checked,
+                      }))
+                    }
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 dark:bg-gray-700 peer-checked:bg-red-600"></div>
+                  <div className="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform peer-checked:translate-x-full"></div>
+                </label>
+              </div>
             </div>
             <div className="flex justify-end gap-2">
               <button

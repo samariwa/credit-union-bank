@@ -123,6 +123,56 @@ class BankingAPITestCase(APITestCase):
         self.assertEqual(self.transaction.to_account.id, self.account.id)
         self.assertEqual(self.transaction.business.id, self.business.id)
 
+    def test_withdrawal_exceeding_balance(self):
+        # Attempt to withdraw more than the current balance
+        url = reverse('transaction-list')
+        data = {
+            "transaction_type": "withdrawal",
+            "amount": "1500.00",
+            "from_account": str(self.account.id),
+            "to_account": None
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Insufficient funds", response.data.get("detail", ""))
+
+    def test_payment_exceeding_balance(self):
+        # Attempt to make a payment more than the current balance
+        url = reverse('transaction-list')
+        data = {
+            "transaction_type": "payment",
+            "amount": "1200.00",
+            "from_account": str(self.account.id),
+            "to_account": None
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Insufficient funds", response.data.get("detail", ""))
+
+    def test_transfer_exceeding_balance(self):
+        # Create a second account to transfer to
+        to_account = Account.objects.create(
+            id=uuid.uuid4(),
+            name="Recipient Account",
+            starting_balance=Decimal("500.00"),
+            current_balance=Decimal("500.00"),
+            user=self.user,
+            account_type="current"
+        )
+
+        # Attempt to transfer more than the current balance
+        url = reverse('transaction-list')
+        data = {
+            "transaction_type": "transfer",
+            "amount": "2000.00",
+            "from_account": str(self.account.id),
+            "to_account": str(to_account.id)
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Insufficient funds", response.data.get("detail", ""))
+
+
 #TASK4 Add manager_list and user_account actions
 
 class BankingAPIManagerTestCase(APITestCase):
