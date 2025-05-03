@@ -57,37 +57,7 @@ export default function CardRow() {
       }
     };
 
-    // Fetch flagged transactions count (you need to implement this endpoint)
-    const fetchFlaggedTransactions = async () => {
-      try {
-        const response = await apiClient.get("/transactions/flagged"); // Example endpoint
-        if (Array.isArray(response.data)) {
-          setFlaggedCount(response.data.length);
-        } else {
-          setFlaggedCount("Error");
-        }
-      } catch (error) {
-        console.error("Error fetching flagged transactions:", error);
-        setFlaggedCount("Error");
-      }
-    };
-
-    // Fetch transaction success rate (you need to implement this logic)
-    const fetchTransactionSuccessRate = async () => {
-      try {
-        const response = await apiClient.get("/transactions/success-rate"); // Example endpoint
-        if (typeof response.data.success_rate === "number") {
-          setSuccessRate(`${response.data.success_rate.toFixed(2)}%`);
-        } else {
-          setSuccessRate("Error");
-        }
-      } catch (error) {
-        console.error("Error fetching success rate:", error);
-        setSuccessRate("Error");
-      }
-    };
-
-    // Fetch sanctioned businesses (you need to implement this endpoint)
+    // Fetch sanctioned businesses
     const fetchSanctionedBusinesses = async () => {
       try {
         const response = await apiClient.get("/businesses");
@@ -106,10 +76,10 @@ export default function CardRow() {
       }
     };
 
-    // Fetch businesses (you need to implement this endpoint)
+    // Fetch businesses
     const fetchBusinesses = async () => {
       try {
-        const response = await apiClient.get("/businesses"); // Example endpoint
+        const response = await apiClient.get("/businesses");
         if (Array.isArray(response.data)) {
           setBusinesses(response.data);
         } else {
@@ -125,8 +95,6 @@ export default function CardRow() {
     // Run all data fetches
     fetchAccountCount();
     fetchTransactionCount();
-    fetchFlaggedTransactions();
-    fetchTransactionSuccessRate();
     fetchSanctionedBusinesses();
     fetchBusinesses();
   }, []);

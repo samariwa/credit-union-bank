@@ -12,38 +12,18 @@ export default function DashboardLayout() {
   const [spendingSummary, setSpendingSummary] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [topBusinessCustomers, setTopBusinessCustomers] = useState([]);
+  const [sanctionedBusinessReport, setSanctionedBusinessReport] = useState([]);
+  const [topSpenders, setTopSpenders] = useState([]); // State for top spenders
 
   useEffect(() => {
-    const fetchAccountsAndSummaries = async () => {
+    const fetchData = async () => {
       try {
         const token = localStorage.getItem("access_token");
 
-        // Fetch accounts
-        const accountsResponse = await fetch(
-          "http://127.0.0.1:8000/api/accounts/",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        if (!accountsResponse.ok) {
-          throw new Error("Failed to fetch accounts");
-        }
-
-        const accountsData = await accountsResponse.json();
-        const userAccounts = accountsData.filter(
-          (account) => account.user_details?.id === userInfo.id
-        );
-        setAccounts(userAccounts);
-
-        // Fetch spending summaries for each account
-        const summaries = [];
-        for (const account of userAccounts) {
-          const summaryResponse = await fetch(
-            `http://127.0.0.1:8000/api/transactions/spending-summary/${account.id}/`,
+        if (!isAdmin) {
+          // Fetch accounts for non-admin users
+          const accountsResponse = await fetch(
+            "http://127.0.0.1:8000/api/accounts/",
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -52,26 +32,44 @@ export default function DashboardLayout() {
             }
           );
 
-          if (!summaryResponse.ok) {
-            throw new Error(
-              `Failed to fetch spending summary for account ${account.id}`
+          if (!accountsResponse.ok) {
+            throw new Error("Failed to fetch accounts");
+          }
+
+          const accountsData = await accountsResponse.json();
+          const userAccounts = accountsData.filter(
+            (account) => account.user_details?.id === userInfo.id
+          );
+          setAccounts(userAccounts);
+
+          // Fetch spending summaries for each account
+          const summaries = [];
+          for (const account of userAccounts) {
+            const summaryResponse = await fetch(
+              `http://127.0.0.1:8000/api/transactions/spending-summary/${account.id}/`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+              }
             );
+
+            if (!summaryResponse.ok) {
+              throw new Error(
+                `Failed to fetch spending summary for account ${account.id}`
+              );
+            }
+
+            const summaryData = await summaryResponse.json();
+            summaries.push({ accountId: account.id, summary: summaryData });
           }
 
-          const summaryData = await summaryResponse.json();
-          console.log("Spending summary for account:", {
-            accountId: account.id,
-            summary: summaryData,
-          });
-          summaries.push({ accountId: account.id, summary: summaryData });
-        }
-
-        setSpendingSummary(summaries);
-
-        // Fetch top business customers for admin
-        if (isAdmin) {
-          const customersResponse = await fetch(
-            "http://127.0.0.1:8000/api/transactions/top-business-customers/",
+          setSpendingSummary(summaries);
+        } else {
+          // Fetch sanctioned business report for admin users
+          const reportResponse = await fetch(
+            "http://127.0.0.1:8000/api/transactions/sanctioned-business-report/",
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -80,22 +78,50 @@ export default function DashboardLayout() {
             }
           );
 
-          if (!customersResponse.ok) {
-            throw new Error("Failed to fetch top business customers");
+          if (!reportResponse.ok) {
+            throw new Error("Failed to fetch sanctioned business report");
           }
 
-          const customersData = await customersResponse.json();
-          setTopBusinessCustomers(customersData);
+          const reportData = await reportResponse.json();
+          setSanctionedBusinessReport(reportData);
         }
       } catch (error) {
         console.error(error);
       }
     };
 
-    if (!isAdmin) {
-      fetchAccountsAndSummaries();
-    }
+    fetchData();
   }, [isAdmin, userInfo.id]);
+
+  useEffect(() => {
+    const fetchTopSpenders = async () => {
+      try {
+        if (isAdmin) {
+          const token = localStorage.getItem("access_token");
+          const response = await fetch(
+            "http://127.0.0.1:8000/api/transactions/top-10-spenders/",
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error("Failed to fetch top spenders");
+          }
+
+          const data = await response.json();
+          setTopSpenders(data);
+        }
+      } catch (error) {
+        console.error("Error fetching top spenders:", error);
+      }
+    };
+
+    fetchTopSpenders();
+  }, [isAdmin]);
 
   return (
     <div className="flex min-h-screen text-white bg-[#0f0f0f]">
@@ -106,44 +132,49 @@ export default function DashboardLayout() {
         <div className="flex flex-col justify-between h-full">
           <div className="flex flex-col gap-6">
             <CardRow />
-          </div>
-          <div>
-            <Transaction />
-          </div>
-          {!isAdmin ? (
-            <div className="bg-[#111111] rounded-xl p-6 shadow-lg w-full">
-              <h2 className="text-white text-4xl font-semibold mb-4">
-                Accounts
-              </h2>
-              <table className="table-auto w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b">
-                    <th className="py-2 px-4 font-medium text-gray-400">
-                      Account
-                    </th>
-                    <th className="py-2 px-4 font-medium text-gray-400">
-                      Balance
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {accounts.map((account) => (
-                    <tr key={account.id} className="border-b hover:bg-gray-800">
-                      <td className="py-2 px-4 text-gray-300">
-                        <div>{account.name}</div>
-                        <div className="text-sm text-gray-500">
-                          {account.id}
-                        </div>
-                      </td>
-                      <td className="py-2 px-4 text-gray-300">
-                        £{account.current_balance}
-                      </td>
+            {!isAdmin ? null : (
+              <div className="bg-[#111111] rounded-xl p-6 shadow-lg w-full">
+                <TransactionStatusChart data={topSpenders} />
+              </div>
+            )}
+            {!isAdmin ? (
+              <div className="bg-[#111111] rounded-xl p-6 shadow-lg w-full">
+                <h2 className="text-white text-4xl font-semibold mb-4">
+                  Accounts
+                </h2>
+                <table className="table-auto w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="py-2 px-4 font-medium text-gray-400">
+                        Account
+                      </th>
+                      <th className="py-2 px-4 font-medium text-gray-400">
+                        Balance
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : null}
+                  </thead>
+                  <tbody>
+                    {accounts.map((account) => (
+                      <tr
+                        key={account.id}
+                        className="border-b hover:bg-gray-800"
+                      >
+                        <td className="py-2 px-4 text-gray-300">
+                          <div>{account.name}</div>
+                          <div className="text-sm text-gray-500">
+                            {account.id}
+                          </div>
+                        </td>
+                        <td className="py-2 px-4 text-gray-300">
+                          £{account.current_balance}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
+          </div>
         </div>
 
         {/* Right Column */}
@@ -192,45 +223,39 @@ export default function DashboardLayout() {
             </div>
           )}
           <div>
-            <FlaggedTransactions />
-          </div>
-          {!isAdmin ? null : (
-            <div className="bg-[#111111] rounded-xl p-6 shadow-lg w-full">
-              <h2 className="text-white text-4xl font-semibold mb-4">
-                Top Business Customers
-              </h2>
-              <table className="table-auto w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b">
-                    <th className="py-2 px-4 font-medium text-gray-400">
-                      Business Name
-                    </th>
-                    <th className="py-2 px-4 font-medium text-gray-400">
-                      Total Transactions
-                    </th>
-                    <th className="py-2 px-4 font-medium text-gray-400">
-                      Total Amount
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {topBusinessCustomers.map((customer, index) => (
-                    <tr key={index} className="border-b hover:bg-gray-800">
-                      <td className="py-2 px-4 text-gray-300">
-                        {customer.business_name}
-                      </td>
-                      <td className="py-2 px-4 text-gray-300">
-                        {customer.total_transactions}
-                      </td>
-                      <td className="py-2 px-4 text-gray-300">
-                        £{customer.total_amount}
-                      </td>
+            {/* <FlaggedTransactions /> */}
+            {isAdmin && (
+              <div className="bg-[#111111] rounded-xl p-6 shadow-lg w-full">
+                <h2 className="text-white text-4xl font-semibold mb-4">
+                  Sanctioned Business Report
+                </h2>
+                <table className="table-auto w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="py-2 px-4 font-medium text-gray-400">
+                        Business Name
+                      </th>
+                      <th className="py-2 px-4 font-medium text-gray-400">
+                        Total Spent
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                  </thead>
+                  <tbody>
+                    {sanctionedBusinessReport.map((item, index) => (
+                      <tr key={index} className="border-b hover:bg-gray-800">
+                        <td className="py-2 px-4 text-gray-300">
+                          {item.business__name}
+                        </td>
+                        <td className="py-2 px-4 text-gray-300">
+                          £{item.total_spent}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
       </main>
     </div>
