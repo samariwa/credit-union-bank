@@ -13,6 +13,8 @@ const AccountDetail = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editName, setEditName] = useState("");
   const [editPostcode, setEditPostcode] = useState("");
+  const [currentPage, setCurrentPage] = useState(1); // Initialize current page state
+  const itemsPerPage = 10; // Define items per page
 
   useEffect(() => {
     const fetchAccountDetails = async () => {
@@ -135,6 +137,26 @@ const AccountDetail = () => {
       }
     }
   };
+
+  // Function to handle next page
+  const handleNextPage = () => {
+    if (currentPage < Math.ceil(transactions.length / itemsPerPage)) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  // Function to handle previous page
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  // Paginate transactions
+  const paginatedTransactions = transactions.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   if (loading || !account)
     return <div className="p-4 text-center text-gray-500">Loading...</div>;
@@ -272,43 +294,68 @@ const AccountDetail = () => {
           {transactions.length === 0 ? (
             <p className="text-gray-500">No transactions found.</p>
           ) : (
-            <table className="table-auto w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b">
-                  <th className="py-2 px-4 font-medium text-gray-700">Type</th>
-                  <th className="py-2 px-4 font-medium text-gray-700">
-                    Amount
-                  </th>
-                  <th className="py-2 px-4 font-medium text-gray-700">
-                    Timestamp
-                  </th>
-                  <th className="py-2 px-4 font-medium text-gray-700">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {transactions.map((txn) => (
-                  <tr key={txn.id} className="border-b hover:bg-gray-50">
-                    <td className="py-2 px-4 text-gray-700">
-                      {txn.transaction_type}
-                    </td>
-                    <td className="py-2 px-4 text-gray-700">£{txn.amount}</td>
-                    <td className="py-2 px-4 text-gray-700">
-                      {new Date(txn.timestamp).toLocaleString()}
-                    </td>
-                    <td className="py-2 px-4 text-gray-700">
-                      <button
-                        onClick={() => navigate(`/transaction/${txn.id}`)}
-                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 hover:text-gray-800"
-                      >
-                        View
-                      </button>
-                    </td>
+            <>
+              <table className="table-auto w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b">
+                    <th className="py-2 px-4 font-medium text-gray-700">Type</th>
+                    <th className="py-2 px-4 font-medium text-gray-700">
+                      Amount
+                    </th>
+                    <th className="py-2 px-4 font-medium text-gray-700">
+                      Timestamp
+                    </th>
+                    <th className="py-2 px-4 font-medium text-gray-700">
+                      Actions
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {paginatedTransactions.map((txn) => (
+                    <tr key={txn.id} className="border-b hover:bg-gray-50">
+                      <td className="py-2 px-4 text-gray-700">
+                        {txn.transaction_type}
+                      </td>
+                      <td className="py-2 px-4 text-gray-700">£{txn.amount}</td>
+                      <td className="py-2 px-4 text-gray-700">
+                        {new Date(txn.timestamp).toLocaleString()}
+                      </td>
+                      <td className="py-2 px-4 text-gray-700">
+                        <button
+                          onClick={() => navigate(`/transaction/${txn.id}`)}
+                          className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 hover:text-gray-800"
+                        >
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="flex justify-between items-center mt-4">
+                <button
+                  onClick={handlePreviousPage}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 hover:text-gray-800 disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                <span>
+                  Page {currentPage} of{" "}
+                  {Math.ceil(transactions.length / itemsPerPage)}
+                </span>
+                <button
+                  onClick={handleNextPage}
+                  disabled={
+                    currentPage ===
+                    Math.ceil(transactions.length / itemsPerPage)
+                  }
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 hover:text-gray-800 disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            </>
           )}
         </div>
       </div>

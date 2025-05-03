@@ -21,6 +21,8 @@ export default function CardRow() {
   const [transactionCount, setTransactionCount] = useState("...");
   const [flaggedCount, setFlaggedCount] = useState("...");
   const [successRate, setSuccessRate] = useState("...");
+  const [sanctionedBusinesses, setSanctionedBusinesses] = useState([]);
+  const [businesses, setBusinesses] = useState([]);
 
   useEffect(() => {
     // Fetch the number of accounts from the API
@@ -85,11 +87,48 @@ export default function CardRow() {
       }
     };
 
+    // Fetch sanctioned businesses (you need to implement this endpoint)
+    const fetchSanctionedBusinesses = async () => {
+      try {
+        const response = await apiClient.get("/businesses");
+        if (Array.isArray(response.data)) {
+          const sanctioned = response.data.filter(
+            (business) => business.sanctioned === true
+          );
+          setSanctionedBusinesses(sanctioned);
+        } else {
+          console.error("Unexpected API response format:", response.data);
+          setSanctionedBusinesses([]);
+        }
+      } catch (error) {
+        console.error("Error fetching sanctioned businesses:", error);
+        setSanctionedBusinesses([]);
+      }
+    };
+
+    // Fetch businesses (you need to implement this endpoint)
+    const fetchBusinesses = async () => {
+      try {
+        const response = await apiClient.get("/businesses"); // Example endpoint
+        if (Array.isArray(response.data)) {
+          setBusinesses(response.data);
+        } else {
+          console.error("Unexpected API response format:", response.data);
+          setBusinesses([]);
+        }
+      } catch (error) {
+        console.error("Error fetching businesses:", error);
+        setBusinesses([]);
+      }
+    };
+
     // Run all data fetches
     fetchAccountCount();
     fetchTransactionCount();
     fetchFlaggedTransactions();
     fetchTransactionSuccessRate();
+    fetchSanctionedBusinesses();
+    fetchBusinesses();
   }, []);
 
   // Define the cards with title, value, and gradient background
@@ -102,17 +141,17 @@ export default function CardRow() {
     {
       title: "Transactions",
       value: transactionCount,
-      gradient: "from-teal-400 to-emerald-500",
+      gradient: "from-yellow-400 to-orange-500", // Updated color gradient
     },
     {
-      title: "Flagged Transactions",
-      value: flaggedCount,
-      gradient: "from-pink-500 to-purple-600",
+      title: "Businesses",
+      value: businesses.length,
+      gradient: "from-green-400 to-blue-600", // Updated color gradient
     },
     {
-      title: "Transaction Success Rate",
-      value: successRate,
-      gradient: "from-cyan-400 to-teal-500",
+      title: "Sanctioned Businesses",
+      value: sanctionedBusinesses.length,
+      gradient: "from-red-500 to-yellow-600",
     },
   ];
 

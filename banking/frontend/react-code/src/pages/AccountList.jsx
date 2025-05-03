@@ -201,7 +201,10 @@ const AccountList = () => {
           <div className="mb-4">
             <Breadcrumb items={[{ label: "Accounts" }]} />
           </div>
-          <div className="bg-white shadow rounded-xl p-6">
+
+          {/* Accounts Section */}
+          <div className="bg-white shadow rounded-xl p-6 mb-6">
+            <h2 className="text-2xl font-bold mb-4">Accounts</h2>
             <div className="flex justify-between items-center mb-4">
               <h1 className="text-2xl font-bold">{activeTab}</h1>{" "}
               {/* Update title dynamically based on active tab */}

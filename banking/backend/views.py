@@ -141,7 +141,12 @@ class TransactionViewSet(viewsets.ModelViewSet):
             if self.request.user.is_staff:
                 return Transaction.objects.all()
             user_accounts = Account.objects.filter(user=self.request.user)
-            return Transaction.objects.filter(from_account__in=user_accounts)
+
+            # Include transactions where the user is either the sender or the receiver
+            return Transaction.objects.filter(
+                models.Q(from_account__in=user_accounts) |
+                models.Q(to_account__in=user_accounts)
+            )
         return Transaction.objects.none()
     
     def get_permissions(self):
@@ -185,51 +190,27 @@ class TransactionViewSet(viewsets.ModelViewSet):
 
             if transaction_type == 'withdrawal':
                 from_account.current_balance -= amount
-                from_account.save()
+                from_account.save(update_fields=["current_balance"])
 
             elif transaction_type == 'deposit':
-                from_account_id = None  # Ignore from_account for deposits
                 if not to_account_id:
-                    logging.error("Deposit transaction missing 'to_account_id'.")
                     raise ValueError("'to_account_id' is required for deposit transactions.")
 
-                try:
-                    to_account = Account.objects.get(id=to_account_id)
-                except Account.DoesNotExist:
-                    logging.error(f"Account with ID {to_account_id} does not exist for deposit transaction.")
-                    raise ValueError("Account not found for deposit transaction.")
-
-                logging.info(f"To Account ID: {to_account_id}, Initial Balance: {to_account.current_balance}")
+                to_account = Account.objects.get(id=to_account_id)
                 to_account.current_balance += amount
-                to_account.save()
-                logging.info(f"To Account ID: {to_account_id}, Updated Balance: {to_account.current_balance}")
+                to_account.save(update_fields=["current_balance"])
 
             elif transaction_type == 'transfer':
                 from_account = Account.objects.get(id=from_account_id)
                 to_account = Account.objects.get(id=to_account_id)
                 from_account.current_balance -= amount
                 to_account.current_balance += amount
-                from_account.save()
-                to_account.save()
+                from_account.save(update_fields=["current_balance"])
+                to_account.save(update_fields=["current_balance"])
 
             elif transaction_type == 'payment':
-                if not from_account_id:
-                    logging.error("Payment transaction missing 'from_account_id'.")
-                    raise ValueError("'from_account_id' is required for payment transactions.")
-
-                try:
-                    from_account = Account.objects.get(id=from_account_id)
-                except Account.DoesNotExist:
-                    logging.error(f"Account with ID {from_account_id} does not exist for payment transaction.")
-                    raise ValueError("Account not found for payment transaction.")
-
-                logging.info(f"From Account ID: {from_account_id}, Initial Balance: {from_account.current_balance}")
                 from_account.current_balance -= amount
-                if from_account.current_balance < 0:
-                    logging.error("Insufficient funds for payment transaction.")
-                    raise ValueError("Insufficient funds for payment transaction.")
-                from_account.save()
-                logging.info(f"From Account ID: {from_account_id}, Updated Balance: {from_account.current_balance}")
+                from_account.save(update_fields=["current_balance"])
 
             serializer.save()
         except Account.DoesNotExist:

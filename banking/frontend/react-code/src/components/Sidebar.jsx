@@ -1,6 +1,5 @@
 import {
   Home,
-  BarChart2,
   Wallet,
   User,
   Settings,
@@ -9,6 +8,7 @@ import {
   CreditCard,
   FileText,
   Briefcase,
+  BarChart2,
 } from "lucide-react";
 import logo from "../assets/logo.svg";
 import avatar from "../assets/avatar.png";
@@ -17,11 +17,10 @@ import { useEffect, useState } from "react";
 
 const navItems = [
   { icon: Home, label: "Dashboard", to: "/dashboard" },
-  { icon: BarChart2, label: "Analytics", to: "/analytics" },
   { icon: CreditCard, label: "Accounts", to: "/accounts" },
   { icon: FileText, label: "Transactions", to: "/transactions" },
-  { icon: Briefcase, label: "Businesses", to: "/businesses" },
-  { icon: User, label: "Users", to: "/users" },
+  { icon: Briefcase, label: "Businesses", to: "/businesses", adminOnly: true },
+  { icon: User, label: "Users", to: "/users", adminOnly: true },
 ];
 
 export default function Sidebar() {
@@ -62,6 +61,11 @@ export default function Sidebar() {
     fetchUsers();
   }, []);
 
+  // Filter nav items based on user role
+  const filteredNavItems = navItems.filter(
+    (item) => !(item.adminOnly && !userInfo.is_staff)
+  );
+
   return (
     <aside className="fixed top-0 left-0 w-[300px] h-screen bg-black text-white flex flex-col justify-between py-6 px-4">
       <div>
@@ -73,7 +77,7 @@ export default function Sidebar() {
           />
         </div>
         <nav className="space-y-2">
-          {navItems.map(({ icon: Icon, label, to }) => (
+          {filteredNavItems.map(({ icon: Icon, label, to }) => (
             <NavLink
               key={label}
               to={to}

@@ -67,4 +67,39 @@ apiClient.interceptors.response.use(
   }
 );
 
+// Proactively refresh the token before it expires
+const scheduleTokenRefresh = () => {
+  const refreshToken = localStorage.getItem("refresh_token");
+  if (!refreshToken) return;
+
+  // Decode the refresh token to get its expiration time
+  const tokenPayload = JSON.parse(atob(refreshToken.split(".")[1]));
+  const expirationTime = tokenPayload.exp * 1000; // Convert to milliseconds
+  const currentTime = Date.now();
+
+  // Schedule a refresh 1 minute before the token expires
+  const refreshTime = expirationTime - currentTime - 60000;
+  if (refreshTime > 0) {
+    setTimeout(async () => {
+      try {
+        const res = await axios.post("http://127.0.0.1:8000/api/token/refresh/", {
+          refresh: refreshToken,
+        });
+
+        const newAccessToken = res.data.access;
+        localStorage.setItem("access_token", newAccessToken);
+        scheduleTokenRefresh(); // Schedule the next refresh
+      } catch (error) {
+        console.error("🔒 Token refresh failed:", error);
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        window.location.href = "/login";
+      }
+    }, refreshTime);
+  }
+};
+
+// Start the token refresh process when the app loads
+scheduleTokenRefresh();
+
 export default apiClient;
