@@ -196,9 +196,6 @@ export default function DashboardLayout() {
             <CardRow totalSpent={totalSpent} />
             {!isAdmin ? null : (
               <div className="bg-[#111111] rounded-xl p-6 shadow-lg w-full">
-                <h2 className="text-white text-4xl font-semibold mb-4">
-                  Top Spenders Pie Chart
-                </h2>
                 <TransactionStatusChart data={topSpenders} />
               </div>
             )}
