@@ -5,6 +5,16 @@ import Transaction from "../components/Transaction";
 import TopBusinessCustomers from "../components/TopBusinessCustomers";
 import TransactionStatusChart from "../components/TransactionStatusChart";
 import FlaggedTransactions from "../components/FlaggedTransactions";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 export default function DashboardLayout() {
   const userInfo = JSON.parse(localStorage.getItem("user_info"));
@@ -14,6 +24,7 @@ export default function DashboardLayout() {
   const [topBusinessCustomers, setTopBusinessCustomers] = useState([]);
   const [sanctionedBusinessReport, setSanctionedBusinessReport] = useState([]);
   const [topSpenders, setTopSpenders] = useState([]); // State for top spenders
+  const [totalSpent, setTotalSpent] = useState(0); // State for total spent
 
   useEffect(() => {
     const fetchData = async () => {
@@ -123,6 +134,57 @@ export default function DashboardLayout() {
     fetchTopSpenders();
   }, [isAdmin]);
 
+  useEffect(() => {
+    const fetchTotalSpent = async () => {
+      try {
+        if (!isAdmin) {
+          const token = localStorage.getItem("access_token");
+          let total = 0;
+
+          for (const account of accounts) {
+            const response = await fetch(
+              `http://127.0.0.1:8000/api/transactions/spending-summary/${account.id}/`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+
+            if (!response.ok) {
+              throw new Error("Failed to fetch spending summary");
+            }
+
+            const data = await response.json();
+            total += data.reduce((sum, item) => sum + item.total, 0);
+          }
+
+          setTotalSpent(total);
+        }
+      } catch (error) {
+        console.error("Error fetching total spent:", error);
+      }
+    };
+
+    if (!isAdmin && accounts.length > 0) {
+      fetchTotalSpent();
+    }
+  }, [isAdmin, accounts]);
+
+  const transformSpendingSummaryToChartData = (spendingSummary) => {
+    return spendingSummary.map((item) => {
+      const account = accounts.find((acc) => acc.id === item.accountId);
+      const transformed = {
+        accountName: account ? account.name : item.accountId,
+      };
+      item.summary.forEach((s) => {
+        transformed[s.business__category] = s.total;
+      });
+      return transformed;
+    });
+  };
+
   return (
     <div className="flex min-h-screen text-white bg-[#0f0f0f]">
       <Sidebar />
@@ -131,97 +193,89 @@ export default function DashboardLayout() {
         {/* Left Column */}
         <div className="flex flex-col justify-between h-full">
           <div className="flex flex-col gap-6">
-            <CardRow />
+            <CardRow totalSpent={totalSpent} />
             {!isAdmin ? null : (
               <div className="bg-[#111111] rounded-xl p-6 shadow-lg w-full">
+                <h2 className="text-white text-4xl font-semibold mb-4">
+                  Top Spenders Pie Chart
+                </h2>
                 <TransactionStatusChart data={topSpenders} />
               </div>
             )}
-            {!isAdmin ? (
+            {!isAdmin && (
               <div className="bg-[#111111] rounded-xl p-6 shadow-lg w-full">
                 <h2 className="text-white text-4xl font-semibold mb-4">
-                  Accounts
+                  Spending Summary
                 </h2>
-                <table className="table-auto w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="py-2 px-4 font-medium text-gray-400">
-                        Account
-                      </th>
-                      <th className="py-2 px-4 font-medium text-gray-400">
-                        Balance
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {accounts.map((account) => (
-                      <tr
-                        key={account.id}
-                        className="border-b hover:bg-gray-800"
-                      >
-                        <td className="py-2 px-4 text-gray-300">
-                          <div>{account.name}</div>
-                          <div className="text-sm text-gray-500">
-                            {account.id}
-                          </div>
-                        </td>
-                        <td className="py-2 px-4 text-gray-300">
-                          £{account.current_balance}
-                        </td>
-                      </tr>
+                <ResponsiveContainer width="100%" height={400}>
+                  <BarChart
+                    data={transformSpendingSummaryToChartData(spendingSummary)}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="accountName" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    {Array.from(
+                      new Set(
+                        spendingSummary.flatMap((item) =>
+                          item.summary.map((s) => s.business__category)
+                        )
+                      )
+                    ).map((category, index) => (
+                      <Bar
+                        key={category}
+                        dataKey={category}
+                        stackId="a"
+                        fill={`#${Math.floor(Math.random() * 16777215).toString(
+                          16
+                        )}`}
+                      />
                     ))}
-                  </tbody>
-                </table>
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
-            ) : null}
+            )}
           </div>
         </div>
 
         {/* Right Column */}
         <div className="flex flex-col justify-between h-[1100px]">
-          {!isAdmin && (
+          {!isAdmin ? (
             <div className="bg-[#111111] rounded-xl p-6 shadow-lg w-full">
               <h2 className="text-white text-4xl font-semibold mb-4">
-                Spending Summary
+                Accounts
               </h2>
               <table className="table-auto w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b">
                     <th className="py-2 px-4 font-medium text-gray-400">
-                      Account Name
+                      Account
                     </th>
                     <th className="py-2 px-4 font-medium text-gray-400">
-                      Business Category
-                    </th>
-                    <th className="py-2 px-4 font-medium text-gray-400">
-                      Amount
+                      Balance
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {spendingSummary.map((item) =>
-                    item.summary.map((summaryItem, index) => (
-                      <tr
-                        key={`${item.accountId}-${index}`}
-                        className="border-b hover:bg-gray-800"
-                      >
-                        <td className="py-2 px-4 text-gray-300">
-                          {accounts.find((acc) => acc.id === item.accountId)
-                            ?.name || "Unknown Account"}
-                        </td>
-                        <td className="py-2 px-4 text-gray-300">
-                          {summaryItem.business__category || "Uncategorized"}
-                        </td>
-                        <td className="py-2 px-4 text-gray-300">
-                          £{summaryItem.total}
-                        </td>
-                      </tr>
-                    ))
-                  )}
+                  {accounts.map((account) => (
+                    <tr key={account.id} className="border-b hover:bg-gray-800">
+                      <td className="py-2 px-4 text-gray-300">
+                        <div>{account.name}</div>
+                        <div className="text-sm text-gray-500">
+                          {account.id}
+                        </div>
+                      </td>
+                      <td className="py-2 px-4 text-gray-300">
+                        £{account.current_balance}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
-          )}
+          ) : null}
           <div>
             {/* <FlaggedTransactions /> */}
             {isAdmin && (

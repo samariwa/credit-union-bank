@@ -13,7 +13,7 @@ const InfoCard = ({ title, value, gradient }) => {
   );
 };
 
-export default function CardRow() {
+export default function CardRow({ totalSpent }) {
   const userInfo = JSON.parse(localStorage.getItem("user_info"));
 
   // State variables for dynamic values
@@ -23,6 +23,7 @@ export default function CardRow() {
   const [successRate, setSuccessRate] = useState("...");
   const [sanctionedBusinesses, setSanctionedBusinesses] = useState([]);
   const [businesses, setBusinesses] = useState([]);
+  const [roundUpPotsTotal, setRoundUpPotsTotal] = useState(0);
 
   useEffect(() => {
     // Fetch the number of accounts from the API
@@ -92,12 +93,35 @@ export default function CardRow() {
       }
     };
 
+    // Fetch round-up pots total for non-admin users
+    const fetchRoundUpPotsTotal = async () => {
+      try {
+        const response = await apiClient.get("/roundup-pots");
+        if (Array.isArray(response.data)) {
+          const total = response.data.reduce(
+            (acc, pot) => acc + parseFloat(pot.amount),
+            0
+          );
+          setRoundUpPotsTotal(total);
+        } else {
+          console.error("Unexpected API response format:", response.data);
+          setRoundUpPotsTotal(0);
+        }
+      } catch (error) {
+        console.error("Error fetching round-up pots total:", error);
+        setRoundUpPotsTotal(0);
+      }
+    };
+
     // Run all data fetches
     fetchAccountCount();
     fetchTransactionCount();
     fetchSanctionedBusinesses();
     fetchBusinesses();
-  }, []);
+    if (!userInfo.is_staff) {
+      fetchRoundUpPotsTotal();
+    }
+  }, [userInfo.is_staff]);
 
   // Define the cards with title, value, and gradient background
   const cards = [
@@ -109,23 +133,37 @@ export default function CardRow() {
     {
       title: "Transactions",
       value: transactionCount,
-      gradient: "from-yellow-400 to-orange-500", // Updated color gradient
+      gradient: "from-yellow-400 to-orange-500",
     },
-    {
-      title: "Businesses",
-      value: businesses.length,
-      gradient: "from-green-400 to-blue-600", // Updated color gradient
-    },
-    {
-      title: "Sanctioned Businesses",
-      value: sanctionedBusinesses.length,
-      gradient: "from-red-500 to-yellow-600",
-    },
+    userInfo.is_staff
+      ? {
+          title: "Businesses",
+          value: businesses.length,
+          gradient: "from-green-400 to-blue-600",
+        }
+      : {
+          title: "Total Spent",
+          value: `£${Math.round(totalSpent)}`,
+          gradient: "from-yellow-400 to-orange-500",
+        },
+    userInfo.is_staff
+      ? {
+          title: "Sanctioned Businesses",
+          value: sanctionedBusinesses.length,
+          gradient: "from-red-500 to-yellow-600",
+        }
+      : {
+          title: "Round-up Pots Total",
+          value: `£${roundUpPotsTotal.toFixed(2)}`,
+          gradient: "from-green-400 to-blue-600",
+        },
   ];
 
   return (
     <div className="flex flex-col space-y-6 w-full">
-      <h1 className="text-3xl font-bold text-white">Hello, {userInfo.username}!</h1>
+      <h1 className="text-3xl font-bold text-white">
+        Hello, {userInfo.username}!
+      </h1>
 
       <div className="flex items-center justify-between w-full">
         <h2 className="text-xl font-semibold text-white">Summary</h2>
