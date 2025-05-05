@@ -373,12 +373,18 @@ const AccountList = () => {
                   <label className="block text-sm font-medium text-gray-700">
                     Round-Up Enabled
                   </label>
-                  <input
-                    type="checkbox"
-                    checked={roundUpEnabled}
-                    onChange={(e) => setRoundUpEnabled(e.target.checked)}
-                    className="mt-1"
-                  />
+                  <div className="flex items-center">
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={roundUpEnabled}
+                        onChange={(e) => setRoundUpEnabled(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-green-300 dark:peer-focus:ring-green-800 dark:bg-gray-700 peer-checked:bg-green-600"></div>
+                      <div className="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform peer-checked:translate-x-full"></div>
+                    </label>
+                  </div>
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700">

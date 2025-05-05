@@ -1,6 +1,8 @@
 import uuid
 from django.db import models
 from django.contrib.auth.models import User
+from decimal import Decimal
+from math import ceil
 
 class Account(models.Model):
     ACCOUNT_TYPES = [
@@ -26,7 +28,7 @@ class Account(models.Model):
         if not self.pk:  # If the account is being created
             self.current_balance = self.starting_balance
         if not self.user.is_staff:  # Check if the user is not an admin
-            self.starting_balance = None  # Remove starting balance for non-admin users
+            self.starting_balance = Decimal('0.00')  # Set a default value instead of None
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -60,3 +62,34 @@ class Transaction(models.Model):
 
     def __str__(self):
         return f"{self.transaction_type} - {self.amount}"
+
+    def save(self, *args, **kwargs):
+        # Check if this is a new transaction
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+
+        # Handle round-up logic for payment transactions
+        if is_new and self.transaction_type == 'payment':
+            # Deduct the payment amount from the current balance
+            self.from_account.current_balance -= self.amount
+            self.from_account.save()
+
+            if self.from_account.round_up_enabled:
+                # Calculate the round-up amount
+                rounded_up_amount = Decimal(ceil(self.amount))  # Use math.ceil to round up
+                round_up_difference = rounded_up_amount - self.amount
+
+                if round_up_difference > 0:
+                    # Update the round-up pot of the from_account
+                    self.from_account.round_up_pot += round_up_difference
+                    self.from_account.current_balance -= round_up_difference
+                    self.from_account.save()
+
+                    # Create a collect round-up transaction
+                    Transaction.objects.create(
+                        transaction_type='collect_roundup',
+                        amount=round_up_difference,
+                        from_account=self.from_account,
+                        to_account=None,  # No to_account for collect round-up
+                        business=None  # No business for collect round-up
+                    )

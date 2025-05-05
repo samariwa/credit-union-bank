@@ -81,6 +81,10 @@ const TransactionsList = () => {
       setBusinessReadOnly(true);
       setToAccountReadOnly(false);
       setFromAccountReadOnly(true);
+    } else if (transactionType === "roundup_reclaim") {
+      setBusinessReadOnly(true); // Disable business field
+      setToAccountReadOnly(false);
+      setFromAccountReadOnly(false);
     } else {
       setBusinessReadOnly(false);
       setToAccountReadOnly(false);
@@ -182,9 +186,9 @@ const TransactionsList = () => {
     if (selectedAccount) {
       setAccount(`${selectedAccount.id} (${selectedAccount.name})`); // Set the account number with name in brackets
       if (type === "from") {
-        setFromAccountSuggestions([]); // Clear suggestions
+        setFromAccountSuggestions([]); // Clear suggestions after selection
       } else if (type === "to") {
-        setToAccountSuggestions([]); // Clear suggestions
+        setToAccountSuggestions([]); // Clear suggestions for 'to' account
       }
     }
   };
@@ -210,6 +214,7 @@ const TransactionsList = () => {
   };
 
   const handleCreateTransaction = async () => {
+    console.clear(); // Clear all debugging logs
     try {
       const extractId = (value) => {
         const match = value.match(/^\S+/); // Extract the ID before the brackets
@@ -219,6 +224,17 @@ const TransactionsList = () => {
       const fromAccountId = extractId(fromAccount);
       const toAccountId = toAccount ? extractId(toAccount) : null;
       const businessId = business ? extractId(business) : null;
+
+      if (transactionType === "roundup_reclaim") {
+        // Removed the checker for 'fromAccountData'
+        if (
+          parseFloat(amount) >
+          parseFloat(fromAccount.split("(")[1]?.replace(")", ""))
+        ) {
+          alert(`Reclaim amount exceeds the round-up pot balance.`);
+          return;
+        }
+      }
 
       if (transactionType !== "deposit" && !fromAccountId) {
         alert("Invalid 'From Account' name.");
@@ -297,7 +313,7 @@ const TransactionsList = () => {
                 "Payment",
                 "Withdrawal",
                 "Deposit",
-                "Collect Round_Up",
+                "Collect_roundup",
                 "Transfer",
                 "Roundup_Reclaim",
               ].map((tab) => (
@@ -401,7 +417,9 @@ const TransactionsList = () => {
                 <option value="payment">Payment</option>
                 <option value="withdrawal">Withdrawal</option>
                 <option value="deposit">Deposit</option>
-                <option value="collect_roundup">Collect Roundup</option>
+                <option value="collect_roundup" hidden>
+                  Collect Roundup
+                </option>
                 <option value="transfer">Transfer</option>
                 <option value="roundup_reclaim">Round Up Reclaim</option>
               </select>

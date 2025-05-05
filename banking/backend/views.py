@@ -127,6 +127,25 @@ class AccountViewSet(viewsets.ModelViewSet):
         
         return Response(serializer.data)
 
+    def partial_update(self, request, *args, **kwargs):
+        """
+        Update specific fields of an account, such as round_up_enabled.
+        """
+        account = self.get_object()
+        round_up_enabled = request.data.get('round_up_enabled', None)
+        starting_balance = request.data.get('starting_balance', None)
+
+        if starting_balance is not None:
+            account.starting_balance = starting_balance
+
+        if round_up_enabled is not None:
+            account.round_up_enabled = round_up_enabled
+
+        account.save()
+
+        serializer = self.get_serializer(account)
+        return Response(serializer.data)
+
 class TransactionViewSet(viewsets.ModelViewSet):
     serializer_class = TransactionSerializer
     
@@ -212,6 +231,32 @@ class TransactionViewSet(viewsets.ModelViewSet):
                 from_account.current_balance -= amount
                 from_account.save(update_fields=["current_balance"])
 
+            elif transaction_type == 'roundup_reclaim':
+                if not from_account_id:
+                    raise ValueError("'from_account_id' is required for roundup reclaim transactions.")
+
+                try:
+                    from_account = Account.objects.get(id=from_account_id)
+                except Account.DoesNotExist:
+                    raise ValueError("From account not found for this transaction.")
+
+                if from_account.round_up_pot < amount:
+                    raise ValueError("Reclaim amount exceeds the round-up pot balance.")
+
+                # Deduct from round-up pot
+                from_account.round_up_pot -= amount
+                from_account.save(update_fields=["round_up_pot"])
+
+                if to_account_id:
+                    try:
+                        to_account = Account.objects.get(id=to_account_id)
+                    except Account.DoesNotExist:
+                        raise ValueError("To account not found for this transaction.")
+
+                    # Add to the to_account's current balance
+                    to_account.current_balance += amount
+                    to_account.save(update_fields=["current_balance"])
+
             serializer.save()
         except Account.DoesNotExist:
             logging.error(f"Account not found. From Account ID: {from_account_id}, To Account ID: {to_account_id}")
@@ -231,7 +276,9 @@ class TransactionViewSet(viewsets.ModelViewSet):
                 return Response({"detail": "You don't have permission to access this account"}, 
                                status=status.HTTP_403_FORBIDDEN)
                 
-            transactions = Transaction.objects.filter(from_account=account)
+            transactions = Transaction.objects.filter(
+                models.Q(from_account=account) | models.Q(to_account=account)
+            )
             serializer = self.get_serializer(transactions, many=True)
             return Response(serializer.data)
         except Account.DoesNotExist:

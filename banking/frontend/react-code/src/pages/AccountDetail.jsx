@@ -14,6 +14,7 @@ const AccountDetail = () => {
   const [editName, setEditName] = useState("");
   const [editPostcode, setEditPostcode] = useState("");
   const [currentPage, setCurrentPage] = useState(1); // Initialize current page state
+  const [roundUpEnabled, setRoundUpEnabled] = useState(false); // Add state for round-up toggle
   const itemsPerPage = 10; // Define items per page
 
   useEffect(() => {
@@ -76,6 +77,12 @@ const AccountDetail = () => {
     fetchTransactions();
   }, [id]);
 
+  useEffect(() => {
+    if (account) {
+      setRoundUpEnabled(account.round_up_enabled); // Set initial state from account data
+    }
+  }, [account]);
+
   const handleEditSubmit = async () => {
     try {
       const token = localStorage.getItem("access_token");
@@ -90,6 +97,7 @@ const AccountDetail = () => {
           body: JSON.stringify({
             name: editName,
             postcode: editPostcode,
+            round_up_enabled: roundUpEnabled,
           }),
         }
       );
@@ -135,6 +143,35 @@ const AccountDetail = () => {
         console.error("Failed to delete account:", error);
         alert("An error occurred. Please try again.");
       }
+    }
+  };
+
+  const handleRoundUpToggle = async (checked) => {
+    try {
+      const token = localStorage.getItem("access_token");
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/accounts/${id}/`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            round_up_enabled: checked,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+
+      const updatedAccount = await response.json();
+      setAccount(updatedAccount);
+      setRoundUpEnabled(updatedAccount.round_up_enabled);
+    } catch (error) {
+      console.error("Failed to update round-up setting:", error);
     }
   };
 
@@ -217,6 +254,23 @@ const AccountDetail = () => {
                   className="w-full border px-3 py-2 rounded"
                 />
               </div>
+              <div className="mb-4">
+                <label className="block text-gray-700 font-medium mb-2">
+                  Round-Up Enabled
+                </label>
+                <div className="flex items-center">
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={roundUpEnabled}
+                      onChange={(e) => setRoundUpEnabled(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-green-300 dark:peer-focus:ring-green-800 dark:bg-gray-700 peer-checked:bg-green-600"></div>
+                    <div className="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform peer-checked:translate-x-full"></div>
+                  </label>
+                </div>
+              </div>
               <div className="flex justify-end gap-2">
                 <button
                   onClick={() => setIsEditModalOpen(false)}
@@ -279,10 +333,18 @@ const AccountDetail = () => {
                 </th>
                 <td className="py-2 px-4 text-gray-700">{account.postcode}</td>
               </tr>
-              <tr>
+              <tr className="border-b">
                 <th className="py-2 px-4 font-medium text-gray-700">User</th>
                 <td className="py-2 px-4 text-gray-700">
                   {account.user_details?.username}
+                </td>
+              </tr>
+              <tr className="border-b">
+                <th className="py-2 px-4 font-medium text-gray-700">
+                  Round-Up Enabled
+                </th>
+                <td className="py-2 px-4 text-gray-700">
+                  {account.round_up_enabled ? "Enabled" : "Disabled"}
                 </td>
               </tr>
             </tbody>
@@ -298,7 +360,9 @@ const AccountDetail = () => {
               <table className="table-auto w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b">
-                    <th className="py-2 px-4 font-medium text-gray-700">Type</th>
+                    <th className="py-2 px-4 font-medium text-gray-700">
+                      Type
+                    </th>
                     <th className="py-2 px-4 font-medium text-gray-700">
                       Amount
                     </th>
